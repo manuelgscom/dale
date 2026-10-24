@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Fake wget for tests/fetch_test.cpp: copies $FAKE_SRC to the -O target, no network.
+# FAKE_LOG: file to log the name and the arguments to (one per line).
+# FAKE_FAIL=1: exits with an error. FAKE_SIGNAL=<signal>: kills itself with that signal.
+if [ -n "$FAKE_LOG" ]; then
+    printf '%s\n' "wget" "$@" >> "$FAKE_LOG"
+fi
+if [ -n "$FAKE_SIGNAL" ]; then
+    kill -s "$FAKE_SIGNAL" $$
+fi
+if [ "$FAKE_FAIL" = 1 ]; then
+    exit 22
+fi
+out=
+while [ $# -gt 0 ]; do
+    if [ "$1" = -O ]; then
+        out=$2
+        shift
+    fi
+    shift
+done
+[ -n "$out" ] || exit 2
+cp "$FAKE_SRC" "$out"

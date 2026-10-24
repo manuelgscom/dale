@@ -1,0 +1,1 @@
+os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl

@@ -1,0 +1,685 @@
+# Cases that must be classified exactly as PRECAUCIÓN.
+# None may reach peligro or stay at seguro.
+
+# R4: rm in any other case (non-recursive or without critical operands)
+rm fichero.txt
+rm -f *.log
+rm *
+rm -i notas.txt
+rm -- -nombre-raro
+rm -r build/
+rm -rf ./node_modules
+rm -rf dist
+rm -rf node_modules dist .cache
+rm -rf ~/Descargas/viejo
+rm -rf ~/.cache
+rm -r ../build
+rm -rf /tmp/build-cache
+rm -rf /home/manuel/tmp/x
+rm -rf /var/log/app/*.log
+rm -f /etc/nginx/sites-enabled/default
+# $HOME is a known variable (normalised to ~); ~/.cache/pip is not a critical path
+rm -rf $HOME/.cache/pip
+# variable without / after it: R2 does not apply
+rm -r "$DIR"
+rm -rf $BUILD
+unlink enlace
+rmdir carpeta_vacia
+
+# R5b: dd without a device target
+dd if=a.img of=b.img
+dd if=/dev/zero of=swapfile bs=1M count=1024
+dd if=/dev/urandom of=prueba.bin bs=1M count=10
+dd if=/dev/sda of=disco.img bs=4M
+dd if=ubuntu.iso of=/tmp/ubuntu.img
+
+# R7b: append to critical files
+echo '127.0.0.1 local.test' >> /etc/hosts
+echo '10.0.0.5 db' | sudo tee -a /etc/hosts
+tee -a /etc/hosts
+echo 'alias ll="ls -la"' >> ~/.bashrc
+cat clave.pub >> ~/.ssh/authorized_keys
+echo 'export EDITOR=vim' >> ~/.profile
+
+# R10b: permissions and owners outside C* and F
+chmod +x script.sh
+chmod 644 notas.txt
+chmod -R u+w .
+chmod -R 755 ./public
+chmod 600 ~/.ssh/id_ed25519
+chmod 700 ~/.ssh
+chmod u+s ./bin/herramienta
+chmod g+s compartido
+chown manuel:manuel fichero.txt
+chown -R www-data:www-data /var/www/html
+chgrp staff informe.pdf
+chgrp -R devs ./proyecto
+
+# R12b: terminate normal processes
+kill 1234
+kill -9 4321
+kill -15 12
+kill -HUP $(pgrep nginx)
+kill %1
+killall firefox
+killall nginx
+pkill -f node
+pkill -f "python app.py"
+
+# R14c: code the checker cannot review
+eval "$CMD"
+eval ls
+source venv/bin/activate
+source .env
+. ./env.sh
+. ~/.profile
+python -c 'print(1)'
+python3 -c "import sys; print(sys.version)"
+perl -e 'print 1'
+perl -ne 'print if /foo/' f.txt
+ruby -e 'puts 1'
+node -e 'console.log(1)'
+cat script.sh | bash
+bash < script.sh
+python3 < script.py
+echo 'rm -f a.txt' | sh
+echo 'chmod +x a' | bash
+sh -c 'rm a.txt'
+bash -c 'touch marca'
+
+# R15b: firewall without flushing (and listings, which are not on the allow list)
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -D INPUT 3
+iptables -P INPUT ACCEPT
+# Adversarial review 2: moved to seguro.txt by a later decision
+# iptables -L -n
+ufw allow 22/tcp
+ufw deny 23
+ufw enable
+# Adversarial review 2: moved to seguro.txt by a later decision
+# ufw status
+nft add rule inet filter input tcp dport 22 accept
+# Adversarial review 2: moved to seguro.txt by a later decision
+# nft list ruleset
+firewall-cmd --add-port=80/tcp
+firewall-cmd --reload
+
+# R16b: non-critical services or non-destructive verbs
+systemctl restart nginx
+systemctl start docker
+systemctl stop nginx
+systemctl reload nginx
+systemctl enable --now foo
+systemctl disable bluetooth
+systemctl daemon-reload
+systemctl restart sshd
+systemctl restart ssh
+systemctl suspend
+systemctl hibernate
+systemctl isolate graphical.target
+systemctl --user restart pipewire
+sudo systemctl restart nginx
+service nginx restart
+service apache2 stop
+
+# R17b: git that modifies without losing history
+git push --force-with-lease
+git push origin main
+git push -u origin feature
+git commit -m "arreglo"
+git add .
+git pull
+git fetch
+git checkout main
+git merge dev
+git rebase main
+git stash
+git stash pop
+git reset HEAD~1
+git reset --soft HEAD~1
+git branch -d feature-vieja
+git clean -n -d
+git clean -f
+git restore src/main.cpp
+git checkout -- src/a.c
+git tag v1.0
+git config user.name "Manuel"
+git init
+git clone https://github.com/x/y.git
+
+# R18b: containers that change state without mass deletion
+docker run -it ubuntu bash
+docker run --privileged alpine
+docker run -v /:/host alpine ls /host
+docker rm web
+docker rm -f web
+docker rmi nginx:old
+docker stop web
+docker compose up -d
+docker build -t app .
+docker pull postgres:16
+docker exec -it web sh
+docker system prune
+docker system prune -f
+docker image prune -a
+docker container prune -f
+docker network prune
+podman run --rm alpine echo hola
+
+# R19 (almost): crontab without -r
+# Adversarial review 2: moved to seguro.txt by a later decision
+# crontab -l
+crontab -e
+crontab tareas.txt
+
+# R20b: accounts
+passwd
+passwd manuel
+passwd -l bob
+chpasswd < usuarios.txt
+useradd -m bob
+usermod -aG docker manuel
+usermod -L bob
+visudo
+chsh -s /bin/zsh
+
+# R21b: modify files outside C* and F
+mv a.txt b.txt
+mv a.txt /tmp/
+mv *.jpg fotos/
+mv ./build ./build.old
+cp a.txt b.txt
+cp -r src copia
+cp /etc/hosts /tmp/hosts.bak
+cp -a /etc /tmp/etc-copia
+cp ~/.bashrc ~/.bashrc.bak
+ln -s destino enlace
+install -m 755 herramienta /usr/local/bin/herramienta
+mkdir -p a/b/c
+touch nuevo.txt
+truncate -s 0 app.log
+truncate -s 0 /var/log/app.log
+for f in *.jpg; do mv "$f" "${f%.jpg}.png"; done
+
+# R23b: find -delete with filters and outside C*
+find . -name '*.pyc' -delete
+find /tmp -type f -mtime +7 -delete
+find build -name '*.o' -delete
+find ~/Descargas -name '*.part' -delete
+find . -type d -empty -delete
+# find -exec with non-recursive rm: {} becomes "." and rm . is not recursive (R4)
+find . -name '*.tmp' -exec rm {} +
+
+# R24b: rsync without --delete, and scp
+rsync -av src/ dst/
+rsync -avz ./ host:/backup/
+rsync -av --exclude .git src/ dst/
+scp informe.pdf host:/tmp/
+scp -r host:/var/log ./logs
+
+# R25c: install, upgrade or remove non-critical packages
+sudo apt install ripgrep
+apt-get update
+apt upgrade
+apt remove vim
+sudo apt purge firefox
+apt autoremove
+apt-get remove --purge nano
+dnf install htop
+dnf remove nano
+yum update
+pacman -S git
+pacman -Syu
+pacman -R vim
+pacman -Rs vim
+zypper install nginx
+apk add curl
+snap install code
+snap remove spotify
+flatpak install flathub org.gimp.GIMP
+flatpak uninstall org.gimp.GIMP
+dpkg -i paquete.deb
+dpkg -r paquete
+rpm -e paquete
+pip install requests
+pip uninstall flask
+pipx install black
+npm install -g typescript
+npm install
+cargo install ripgrep
+
+# R26: system state
+mount /dev/sdb1 /mnt
+umount /mnt/usb
+swapon /swapfile
+swapoff -a
+sysctl -w vm.swappiness=10
+sysctl -a
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+modprobe vboxdrv
+rmmod nouveau
+insmod modulo.ko
+chattr +i fichero
+setfacl -m u:bob:r informe.txt
+
+# R27b: kubectl that modifies without mass deletion
+kubectl apply -f deploy.yaml
+kubectl delete pod web-1
+kubectl delete pod web-1 -n prod
+kubectl delete deployment web
+kubectl delete -f deploy.yaml
+kubectl scale deploy web --replicas=3
+kubectl rollout restart deploy/web
+kubectl edit deploy web
+kubectl exec -it web-1 -- sh
+kubectl port-forward svc/web 8080:80
+
+# R28: curl/wget to disk or sending data
+curl -o archivo.tar.gz https://example.com/archivo.tar.gz
+curl -O https://example.com/archivo.tar.gz
+curl -fsSL https://x.io/install.sh -o install.sh
+curl -d 'a=1' https://api.example.com/items
+curl --data-binary @datos.json https://api.example.com/items
+curl -X POST https://api.example.com/items
+curl -X DELETE https://api.example.com/items/3
+curl -F archivo=@a.txt https://api.example.com/subir
+curl -T a.txt ftp://ftp.example.com/
+wget https://example.com/ubuntu.iso
+wget -O pagina.html https://example.com
+wget -q https://x.io/install.sh
+
+# R29: sed -i, perl -i, yq -i, awk that writes or executes
+sed -i 's/a/b/' f.txt
+sed -i.bak 's/foo/bar/g' config.ini
+sed --in-place 's/x/y/' f.txt
+perl -i -pe 's/a/b/' f.txt
+yq -i '.version = "2"' config.yaml
+awk '{print > "salida.txt"}' f.txt
+awk '{system("ls")}' f.txt
+awk '{print | "sort"}' f.txt
+# awk with > in the program (comparison): read-only since adversarial review 2
+# Adversarial review 2: moved to seguro.txt by a later decision
+# awk '$3 > 1000 {print $1}' /etc/passwd
+
+# R30: sudo and equivalents with a safe inner command
+sudo ls
+sudo cat /etc/shadow
+sudo systemctl status nginx
+sudo journalctl -xe
+sudo fdisk -l
+sudo -u www-data whoami
+sudo -i
+sudo -s
+doas ls
+pkexec ls
+run0 ls
+su -c 'ls'
+chroot /mnt/sysroot ls
+ssh host ls
+ssh servidor 'df -h'
+ssh -p 2222 user@host uptime
+ssh -i clave.pem user@1.2.3.4 'uptime'
+
+# Wrappers with an option that is not in the wrapper table
+nice --adjustment=5 ls
+timeout --preserve-status 5 ls
+
+# Partitioning/disks in listing mode outside the allow list
+sfdisk -l /dev/sda
+gdisk -l /dev/sda
+sgdisk -p /dev/sda
+smartctl -t short /dev/sda
+
+# Allow list with an unmet condition
+date -s '2026-01-01 10:00'
+hostname nuevo-nombre
+hostnamectl set-hostname nuevo-nombre
+dmesg -c
+journalctl --vacuum-time=2d
+journalctl --rotate
+# Adversarial review 2: moved to peligro.txt by a later decision
+# ip link set eth0 down
+ip addr add 10.0.0.2/24 dev eth0
+ip route flush cache
+tar -czf a.tar.gz carpeta
+tar -xzf a.tar.gz
+find . -name '*.c' -fprint lista.txt
+
+# Writes with > / >> / tee to normal files
+echo hola > saludo.txt
+ls > lista.txt
+date >> registro.log
+cat a b > c
+grep foo f.txt &> salida.log
+echo x >| f.txt
+ls 2> errores.log
+echo x | tee salida.txt
+ps aux | tee procesos.txt
+ls 2>&1 | tee out.log
+cat /etc/hosts > hosts.bak
+cat /dev/sda > disco.img
+curl -s https://example.com > pagina.html
+
+# R31: unknown commands and local scripts
+./build.sh
+./configure
+bash deploy.sh
+sh install.sh
+zsh setup.zsh
+python3 manage.py migrate
+python3 -m http.server
+node server.js
+make
+make install
+cmake ..
+cargo build
+go run .
+npm test
+vim notas.txt
+nano config.ini
+code .
+export PATH=$PATH:/opt/bin
+alias ll='ls -la'
+read respuesta
+zip -r a.zip carpeta
+unzip a.zip
+gzip fichero.txt
+ffmpeg -i a.mp4 b.mp3
+last reboot
+psql -U postgres
+tmux new -s trabajo
+herramienta-desconocida --flag
+
+# Dynamic word in command position
+$CMD -x
+$(which ls)
+"$EDITOR" notas.txt
+${PAGER:-less} README.md
+`which python` --version
+
+# PATH= / LD_PRELOAD= / LD_LIBRARY_PATH= prefixes
+PATH=/tmp:$PATH ls
+PATH=/opt/bin:$PATH make
+LD_PRELOAD=/tmp/x.so ls
+LD_LIBRARY_PATH=./lib ./app
+
+# case: structure not fully parsed
+case "$1" in start) echo start;; stop) echo stop;; esac
+case x in *) ls;; esac
+
+# Unclosed quotes, parentheses or expansions
+echo "hola
+ls 'foo
+grep "foo bar' f.txt
+echo $(date
+echo ${HOME
+(ls
+echo `date
+
+# More than 8 nesting levels
+echo $(echo $(echo $(echo $(echo $(echo $(echo $(echo $(echo $(echo hola)))))))))
+
+# Deliberate obfuscation: exactly precaución expected
+$(echo rm) -rf /
+"$(echo rm)" -rf /
+X=rm; $X -rf /
+C=rm; $C -rf ~
+R=r; M=m; $R$M -rf /
+${CMD} -rf /
+`printf rm` -rf /
+$(printf '\x72\x6d') -rf /
+$CMD if=/dev/zero of=/dev/sda
+${X} --force /etc/passwd
+
+# Adversarial review
+curl -K cfg http://a
+curl --config cfg http://a
+wget -e robots=off http://a
+
+# Adversarial review 2: abbreviated long options
+date --se '2020-01-01'
+sed --in-pl 's/a/b/' f
+journalctl --rot
+dmesg --cle
+wget --output-doc=x http://a
+tar --to-comm='sh -c x' -xf a.tar
+tar --checkpoint-act=exec='rm x' -cf a.tar d
+sudo --us root ls
+
+# Adversarial review 2: environment prefixes
+LESSOPEN='|x %s' less f
+PAGER=x git log
+GIT_SSH_COMMAND=x git fetch
+BASH_ENV=x bash -c ls
+env MANPAGER=x man ls
+
+# Adversarial review 2: allow list by options (curl, wget, tar)
+curl --libcurl x.c https://x
+curl -K cfg https://x
+curl --unix-socket /x http://a
+curl -w '%output{x}' https://x
+wget -O- -e robots=off https://x
+wget -O- --no-verbose https://x
+tar -tf a.tar --to-command=sh
+tar -t --use-compress-program=x -f a.tar
+
+# Adversarial review 2: ip and nmcli
+ip a s
+ip addr add 1.2.3.4/24 dev eth0
+nmcli general hostname nuevo
+
+# Adversarial review 2: awk -i inplace, less +, man -H, git grep -O, bat --pager
+gawk -i inplace '{print}' f
+awk -i lib.awk '{print}' f
+less '+!rm x' f
+more '+|x' f
+man -H ls
+git grep -O foo
+git grep --open-files-in-pager=vim foo
+bat --pager 'sh -c x' f
+
+# Adversarial review 2: paths ($HOME, $PWD, expansions, globs, quoted ~, braces)
+rm -rf '~'
+rm -rf "~"
+rm -rf \~
+rm -rf {1..3}
+
+# Adversarial review 2: extended C, F and D sets
+rm -rf /home/bob/build
+echo x > /dev/shm/x
+
+# Adversarial review 2: new wrappers
+taskset -p 1234
+systemd-run --user ls
+at now
+
+# Adversarial review 2: catalogue extensions
+ip route del 10.0.0.0/8
+crontab x.txt
+gpasswd -a bob docker
+git stash drop
+git branch -f x
+git rm x.txt
+docker compose down
+
+# Adversarial review 2: --help and --version
+rm --help
+shutdown --help
+mkfs.ext4 --help
+
+# Adversarial review 2: awk
+awk '{print $1 > "out"}' f
+awk '{print | "sort"}' f
+awk '"date" | getline d' f
+awk 'BEGIN{system("ls")}'
+awk '{printf "%s\n", $1 >> "x"}' f
+
+# Adversarial review 2: mkfs, shred and find -delete
+find . -name x -empty -delete
+find /tmp -newer x -delete
+find /tmp -user bob -delete
+
+# Adversarial review 2: allow list of queries
+git config user.name bob
+git reflog delete HEAD@{1}
+hostname -F x
+ufw status x
+
+# Adversarial review 2: shutdown -c and cd
+shutdown -c
+
+# ---- Blind adversarial review (against the risk catalogue) ----
+# reason: append to the end of a shell startup file (does not overwrite it; not covered by the critical-file overwrite rule)
+echo 'alias ls=rm' >> ~/.bashrc
+# reason: create a file (touch) as another user with sudo -u
+sudo -u www-data touch /var/www/html/index.html
+# reason: copy a file under env with a neutral locale variable
+env LANG=C cp a.txt b.txt
+# reason: write a tar archive under nice
+nice -n 10 tar czf backup.tgz src/
+# reason: local script under nohup in the background
+nohup ./servidor.sh &
+# reason: install a package under timeout
+timeout 30 pip install requests
+# reason: delete a specific non-critical file
+rm -f notas.txt
+# reason: delete a specific file with \rm
+\rm build/app.o
+# reason: recursive deletion of a specific non-critical directory with an absolute rm path
+/bin/rm -r build/
+# reason: recursive deletion of a project subdirectory (not of .)
+rm -rf ./build
+# reason: recursive deletion of node_modules
+rm -rf node_modules
+# reason: variable followed by a path: when empty it does not end up as /
+rm -rf "$HOME/proyecto/tmp"
+# reason: find -exec rm with filters in /tmp
+find /tmp -name 'sess_*' -mtime +7 -exec rm {} +
+# reason: xargs rm with a list of files
+xargs rm < lista.txt
+# reason: create a directory
+mkdir -p ~/src/nuevo
+# reason: create a non-critical file in the home directory
+touch ~/.hushlogin
+# reason: recursive copy
+cp -r src/ /tmp/src-copia
+# reason: move a specific file
+mv informe.pdf ~/Documentos/
+# reason: sed -i on a non-critical file
+sed -i 's/foo/bar/g' config.ini
+# reason: tee to a normal file
+ls | tee listado.txt
+# reason: install a package with sudo
+sudo apt-get install -y htop
+# reason: install a Python package
+pip install --user black
+# reason: remove non-critical software
+apt-get remove -y vlc
+# reason: reload a non-critical service with service
+service apache2 reload
+# reason: stop a non-critical service
+systemctl stop cups
+# reason: kill a specific process
+kill 12345
+# reason: kill the processes of one's own script by pattern
+pkill -f my_script.py
+# reason: signal to a PID read from a file (substitution)
+kill -HUP $(cat /run/nginx.pid)
+# reason: execute permission on a script
+chmod +x deploy.sh
+# reason: recursive chmod on a project subdirectory
+chmod -R g+w ./compartido
+# reason: change the owner of a specific file
+chown manuel:manuel archivo.txt
+# reason: find -exec chmod with filters in the project
+find . -type f -name '*.sh' -exec chmod +x {} \;
+# reason: git commit
+git commit -am 'fix'
+# reason: non-forced push
+git push origin feature
+# reason: create a branch
+git checkout -b nueva
+# reason: non-forced deletion of an already merged branch
+git branch -d rama-fusionada
+# reason: run a container
+docker run --rm -it ubuntu bash
+# reason: remove a specific container
+docker rm contenedor_viejo
+# reason: prune dangling images (not the system nor volumes)
+docker image prune -f
+# reason: delete a specific Kubernetes pod
+kubectl delete pod web-123
+# reason: download to disk with curl -o
+curl -o archivo.tar.gz https://x.io/f.tgz
+# reason: download to disk with wget
+wget https://x.io/f.zip
+# reason: send data with curl
+curl -X POST -d @datos.json https://api.x.io/x
+# reason: mount
+sudo mount /dev/sdb1 /mnt
+# reason: change a kernel parameter
+sudo sysctl -w vm.swappiness=10
+# reason: load a module
+sudo modprobe v4l2loopback
+# reason: interpreter with unreviewable code (python -c)
+python3 -c 'print(1)'
+# reason: local script with bash
+bash script.sh
+# reason: variable in command position
+$EDITOR notas.txt
+# reason: PATH altered as a prefix
+PATH=/tmp/bin:$PATH ls
+# reason: readable bash -c that writes a normal file
+bash -c 'echo hola > /tmp/x'
+# reason: running something read-only on another machine (ssh)
+ssh servidor uptime
+# reason: watch writing to a log
+watch -n 60 'df -h >> uso.log'
+# reason: write a copy of the crontab to a file
+crontab -l > cron.bak
+# reason: create a user
+useradd -m invitado
+# reason: change the password of a non-root user
+sudo passwd invitado
+# reason: rsync without deletion
+rsync -a src/ dst/
+# reason: symlink to a non-critical file
+ln -s ~/dotfiles/vimrc ~/.vimrc
+# reason: add a firewall rule (no flush, no default DROP)
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+# reason: scale a deployment to zero replicas
+kubectl scale deploy web --replicas=0
+# reason: unmount
+sudo umount /mnt/usb
+
+# ---- Rules added after the adversarial review (they do not raise to peligro) ----
+# reason: sed -i on a file that is not critical
+sed -i s/a/b/ notas.txt
+# reason: sed -i on a copy of a critical file
+sudo sed -i 's/x/y/' /etc/hosts.bak
+# reason: ifconfig bringing up or configuring an interface (not bringing it down)
+ifconfig eth0 up
+# reason: ifconfig changing the address
+sudo ifconfig eth0 192.168.1.5 netmask 255.255.255.0
+# reason: chpasswd for a user that is not root
+echo 'bob:1234' | sudo chpasswd
+# reason: chpasswd with an unknown user
+echo "$USUARIO:1234" | chpasswd
+# reason: nmcli connecting, turning the radio on or changing profiles (does not bring the network down)
+nmcli radio wifi on
+nmcli radio all on
+nmcli device connect wlan0
+nmcli connection up vpn
+nmcli connection modify vpn ipv4.dns 1.1.1.1
+
+# timedatectl and apt-mark that change the system (known but not read-only)
+timedatectl set-timezone Europe/Madrid
+sudo timedatectl set-ntp true
+timedatectl set-time '2026-01-01 10:00:00'
+timedatectl set-local-rtc 0
+apt-mark hold nginx
+sudo apt-mark unhold nginx
+apt-mark auto libfoo1
+apt-mark manual htop
+setfacl -x u:bob informe.txt

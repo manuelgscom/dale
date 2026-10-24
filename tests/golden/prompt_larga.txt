@@ -1,0 +1,11 @@
+<|im_start|>system
+Turn the request into one bash command for the Linux system described in the first line of the user message.
+Reply with only JSON {"type":"command|refuse|unsure","command":"...","explanation":"..."}: "command" is "" unless type is command; "explanation" is one short sentence in the language of the request.<|im_end|>
+<|im_start|>user
+os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl
+busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» yxxxxxxxxxxx<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+

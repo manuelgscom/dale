@@ -1,0 +1,90 @@
+[
+  {
+    "id": "real_v2_es",
+    "context": "os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl",
+    "request": "busca los ficheros de más de 200 MB en mi carpeta personal",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Turn the request into one bash command for the Linux system described in the first line of the user message.\nReply with only JSON {\"type\":\"command|refuse|unsure\",\"command\":\"...\",\"explanation\":\"...\"}: \"command\" is \"\" unless type is command; \"explanation\" is one short sentence in the language of the request."
+      },
+      {
+        "role": "user",
+        "content": "os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl\nbusca los ficheros de más de 200 MB en mi carpeta personal"
+      }
+    ]
+  },
+  {
+    "id": "real_v2_en",
+    "context": "os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl",
+    "request": "show the disk usage of each folder here, sorted by size",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Turn the request into one bash command for the Linux system described in the first line of the user message.\nReply with only JSON {\"type\":\"command|refuse|unsure\",\"command\":\"...\",\"explanation\":\"...\"}: \"command\" is \"\" unless type is command; \"explanation\" is one short sentence in the language of the request."
+      },
+      {
+        "role": "user",
+        "content": "os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl\nshow the disk usage of each folder here, sorted by size"
+      }
+    ]
+  },
+  {
+    "id": "unicode",
+    "context": "os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl",
+    "request": "renombra «año 2024 ñandú».txt a \"café $HOME\\n\" 😀 con tildes áéíóú, ü, ç — y 'comillas' `cmd` ${x}",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Turn the request into one bash command for the Linux system described in the first line of the user message.\nReply with only JSON {\"type\":\"command|refuse|unsure\",\"command\":\"...\",\"explanation\":\"...\"}: \"command\" is \"\" unless type is command; \"explanation\" is one short sentence in the language of the request."
+      },
+      {
+        "role": "user",
+        "content": "os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl\nrenombra «año 2024 ñandú».txt a \"café $HOME\\n\" 😀 con tildes áéíóú, ü, ç — y 'comillas' `cmd` ${x}"
+      }
+    ]
+  },
+  {
+    "id": "tools_none",
+    "context": "os=linux distro=unknown pm=none tools=none",
+    "request": "instala git",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Turn the request into one bash command for the Linux system described in the first line of the user message.\nReply with only JSON {\"type\":\"command|refuse|unsure\",\"command\":\"...\",\"explanation\":\"...\"}: \"command\" is \"\" unless type is command; \"explanation\" is one short sentence in the language of the request."
+      },
+      {
+        "role": "user",
+        "content": "os=linux distro=unknown pm=none tools=none\ninstala git"
+      }
+    ]
+  },
+  {
+    "id": "larga",
+    "context": "os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl",
+    "request": "busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» yxxxxxxxxxxx",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Turn the request into one bash command for the Linux system described in the first line of the user message.\nReply with only JSON {\"type\":\"command|refuse|unsure\",\"command\":\"...\",\"explanation\":\"...\"}: \"command\" is \"\" unless type is command; \"explanation\" is one short sentence in the language of the request."
+      },
+      {
+        "role": "user",
+        "content": "os=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl\nbusca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» y busca en todos los directorios los ficheros de configuración que contengan «ñandú» yxxxxxxxxxxx"
+      }
+    ]
+  },
+  {
+    "id": "espacios",
+    "messages": [
+      {
+        "role": "system",
+        "content": "\n  \tTurn the request into one bash command for the Linux system described in the first line of the user message.\nReply with only JSON {\"type\":\"command|refuse|unsure\",\"command\":\"...\",\"explanation\":\"...\"}: \"command\" is \"\" unless type is command; \"explanation\" is one short sentence in the language of the request. \t\n　 "
+      },
+      {
+        "role": "user",
+        "content": " \n \u001cos=linux distro=ubuntu-24.04 pm=apt tools=curl,docker,fdfind,git,jq,python3,rg,rsync,ssh,systemctl\nlista  los ficheros​ \n  "
+      }
+    ]
+  }
+]

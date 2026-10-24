@@ -1,0 +1,11 @@
+<|im_start|>system
+Turn the request into one bash command for the Linux system described in the first line of the user message.
+Reply with only JSON {"type":"command|refuse|unsure","command":"...","explanation":"..."}: "command" is "" unless type is command; "explanation" is one short sentence in the language of the request.<|im_end|>
+<|im_start|>user
+os=linux distro=unknown pm=none tools=none
+instala git<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+

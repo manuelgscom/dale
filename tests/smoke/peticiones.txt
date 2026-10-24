@@ -1,0 +1,30 @@
+lista los ficheros de más de 200 MB en mi carpeta personal
+find all files modified in the last 24 hours in this directory
+busca la palabra TODO en todos los ficheros .py de este directorio
+show the 10 biggest folders in /var
+cuenta cuántas líneas tiene el fichero access.log
+show disk usage of all mounted filesystems
+comprime la carpeta fotos en un fichero tar.gz
+list running docker containers
+muestra qué proceso está usando el puerto 3000
+show the processes using the most CPU
+mata todos los procesos que se llamen node
+restart the nginx service
+instala ffmpeg
+check if port 443 is open on example.com
+actualiza todos los paquetes del sistema
+copy the folder backups to server.example.com using rsync
+descarga https://example.com/data.json y muestra el campo name
+remove the package apache2 and its config files
+muestra mi dirección IP local
+sort the lines of names.txt and remove duplicates
+reemplaza "foo" por "bar" en config.txt
+show the last 50 lines of /var/log/syslog and keep following it
+escríbeme un poema sobre el otoño
+tell me a joke about cats
+¿quién ganó el mundial de 2010?
+what is the meaning of life?
+recomiéndame una película para esta noche
+bórralos
+fix it
+make it faster

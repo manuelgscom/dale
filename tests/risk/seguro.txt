@@ -1,0 +1,490 @@
+# Cases that must be classified exactly as SEGURO.
+# Only commands from the read-only allow list with their condition met,
+# no writes (except neutral redirections), no policy minimums and no escalating rules.
+
+# Files and text: listings
+ls
+ls -la
+ls -lah /var/log
+ls -la ~/.ssh
+ls -la /
+ls *.txt
+ls -d */
+ls -la /etc/sudoers.d/
+ls -lt | head -n 5
+eza -la
+tree -L 2
+tree -d src
+file /bin/ls
+stat /etc/passwd
+stat -c %s video.mp4
+
+# Files and text: reading contents
+cat README.md
+cat /etc/passwd
+cat /etc/hosts
+cat a.txt b.txt
+head -n 20 main.cpp
+head /etc/resolv.conf
+tail -n 50 /var/log/syslog
+tail -f app.log
+wc -l *.cpp
+wc -c < datos.bin
+less /var/log/syslog
+more README.md
+bat README.md
+batcat src/main.cpp
+
+# Searches
+grep -rn foo src/
+grep -i error app.log
+grep -c TODO *.py
+grep -rl "rm -rf" .
+grep -v '^#' config.ini
+grep foo <<< "foo bar"
+egrep 'error|warning' build.log
+fgrep -x 'hola' lista.txt
+rg -n TODO
+rg --files | head
+ag main_loop src
+fd '\.py$'
+fdfind -e md
+locate nginx.conf
+find . -type f -size +200M
+find / -name '*.conf' 2>/dev/null
+find . -mtime -1 -type f
+find . -maxdepth 2 -type d
+find . -name '*.log' -size +10M
+find ~/Descargas -type f -name '*.iso'
+find . -newer Makefile
+find /etc -name 'sudoers*'
+
+# Disk usage
+du -sh *
+du -sh .
+du -sh /var/log/* 2>/dev/null | sort -h
+du -h --max-depth=1 ~
+df -h
+df -h /
+df -i
+
+# Text: transformation to stdout
+sort nombres.txt
+sort -u lista.txt
+sort -t, -k2 -n datos.csv
+uniq -c palabras.txt
+cut -d: -f1 /etc/passwd
+tr a-z A-Z < entrada.txt
+column -t tabla.txt
+nl main.cpp
+tac log.txt
+rev palabras.txt
+diff a.txt b.txt
+diff -u old.conf new.conf
+diff <(sort a.txt) <(sort b.txt)
+cmp a.bin b.bin
+comm -12 a.txt b.txt
+cat a.txt b.txt | sort | uniq -c | sort -rn | head -n 5
+echo $PATH | tr ':' '\n'
+
+# Checksums and dumps
+md5sum fichero.iso
+sha1sum fichero.iso
+sha256sum ubuntu.iso
+sha256sum -c SHA256SUMS
+sha512sum f.tar.gz
+b2sum f.tar.gz
+base64 imagen.png
+base64 -d mensaje.b64
+xxd firmware.bin | head
+od -c fichero.txt
+hexdump -C cabecera.bin
+strings /usr/bin/ls | head
+
+# Paths
+basename /home/manuel/fichero.txt .txt
+dirname /home/manuel/fichero.txt
+realpath .
+readlink -f /usr/bin/python3
+pwd
+
+# jq, yq, sed and awk without writing
+jq '.name' package.json
+jq -r '.dependencies | keys[]' package.json
+yq '.services' docker-compose.yml
+sed 's/a/b/' f.txt
+sed -n '10,20p' main.cpp
+sed 's/foo/bar/g' entrada.txt | head
+awk '{print $1}' f
+awk -F: '{print $1}' /etc/passwd
+awk -F, '{s+=$2} END {print s}' datos.csv
+awk 'NR==1' f.txt
+
+# Archives: listing only
+tar -tzf a.tar.gz
+tar -tf backup.tar
+tar --list -f a.tar.xz
+tar -tvf backup.tar
+unzip -l a.zip
+7z l a.7z
+zipinfo a.zip
+
+# System
+uname -a
+whoami
+id
+id -u
+groups
+uptime
+free -h
+lscpu
+lsblk
+lsblk -f
+blkid
+lsusb
+lspci -k
+lsmod
+lsof -i :8080
+ps aux
+ps aux | grep nginx
+ps -ef | grep java
+ps aux --sort=-%mem | head
+pgrep -a nginx
+top -bn1 | head -20
+htop
+btop
+date
+date +%F
+date -u
+hostname
+hostnamectl
+hostnamectl status
+printenv
+printenv HOME
+env
+env | sort
+env | grep PATH
+which python3
+which reboot
+type ls
+type mkfs
+whereis gcc
+command -v docker
+dmesg | tail -n 50
+dmesg -T --level=err
+journalctl -u ssh --since today
+journalctl -xe
+journalctl -p err -b
+journalctl --disk-usage
+journalctl -f -u nginx
+systemctl status nginx
+systemctl status sshd
+systemctl list-units --failed
+systemctl list-unit-files
+systemctl list-timers
+systemctl is-active docker
+systemctl is-enabled ssh
+systemctl is-failed nginx
+systemctl show nginx
+systemctl cat nginx
+loginctl list-sessions
+loginctl show-user manuel
+fdisk -l
+fdisk -l /dev/sda
+parted -l
+parted /dev/sda print
+smartctl -a /dev/sda
+smartctl -H /dev/nvme0
+
+# Network
+ip addr
+ip a
+ip -br addr show
+ip route
+ip route show
+ip link show
+ip -6 addr
+ip neigh
+ss -tulpn
+ss -s
+netstat -tlnp
+ping -c 4 8.8.8.8
+dig example.com MX
+dig +short example.com
+nslookup example.com
+host example.com
+traceroute example.com
+tracepath example.com
+nmcli device status
+nmcli connection show
+nmcli general status
+curl -s https://example.com
+curl -I https://example.com
+curl -sS -H 'Accept: application/json' https://api.example.com/items
+curl -X GET https://example.com/api
+curl -s https://api.github.com/repos/x/y | jq .stargazers_count
+curl -s https://x.io/install.sh | less
+wget -qO- https://example.com
+wget -O - https://example.com | head
+
+# Packages (queries)
+apt list --installed
+apt list --upgradable
+apt list --installed | wc -l
+apt show nginx
+apt show sudo
+apt search ripgrep
+apt policy docker-ce
+apt-cache policy nginx
+apt-cache search jq
+apt-cache depends curl
+dpkg -l
+dpkg -l | grep nginx
+dpkg -L curl
+dpkg -s bash
+dpkg -S /usr/bin/ls
+dnf list installed
+dnf info htop
+dnf search ripgrep
+dnf repoquery -l bash
+dnf provides /usr/bin/ls
+rpm -qa
+rpm -qi bash
+rpm -ql bash
+pacman -Q
+pacman -Qi bash
+pacman -Qe
+pacman -Ss ripgrep
+pacman -Si git
+zypper search nginx
+zypper info nginx
+flatpak list
+flatpak info org.gimp.GIMP
+flatpak search gimp
+snap list
+snap info core
+snap find vlc
+
+# Git (queries)
+git status
+git status -s
+git log --oneline -n 10
+git log --graph --oneline --all
+git log -p -- src/main.cpp
+git diff
+git diff --cached
+git diff HEAD~1
+git show HEAD:src/main.cpp
+git branch
+git branch -a
+git branch --show-current
+git remote -v
+git blame src/main.cpp
+git grep -n TODO
+git ls-files
+git rev-parse HEAD
+git describe --tags
+git shortlog -sn
+git tag
+git tag -l 'v1.*'
+git stash list
+git config --get user.email
+git config --list
+
+# Containers and cluster (queries)
+docker ps
+docker ps -a
+docker images
+docker logs web
+docker logs --tail 100 web
+docker inspect web
+docker version
+docker info
+docker stats --no-stream
+podman ps -a
+podman images
+kubectl get pods -A
+kubectl get svc -n prod
+kubectl get nodes -o wide
+kubectl describe pod web-1
+kubectl logs web-1
+kubectl logs -f deploy/web
+kubectl top nodes
+kubectl version --client
+
+# Multimedia (queries)
+ffprobe video.mp4
+identify foto.jpg
+magick identify foto.png
+exiftool foto.jpg
+mediainfo video.mkv
+
+# Misc
+echo hola
+echo reboot
+echo 'rm -rf /'
+printf '%s\n' a b c
+seq 10
+sleep 1
+true
+false
+test -f a.txt
+[ -d src ]
+expr 3 + 4
+echo '2^10' | bc
+bc <<< '2+2'
+cal
+man ls
+man shutdown
+help cd
+yes | head -n 3
+
+# Bare assignments and harmless prefixes
+X=1
+X=1 Y=2
+NOMBRE="hola mundo"
+LANG=C ls -la
+LC_ALL=C sort lista.txt
+
+# Expansions in arguments (not in command position)
+echo $HOME
+ls "${HOME}"
+echo "Usuario: $(whoami)"
+ls $(pwd)
+echo $((1 + 2))
+echo $'a\tb'
+ls # comentario al final
+
+# Neutral redirections
+ls 2>/dev/null
+ls >/dev/null 2>&1
+ls &>/dev/null
+grep foo f.txt 2>/dev/null
+echo error >&2
+ls noexiste 2>&1 | head
+echo hola > /dev/null
+
+# Combinations of safe commands
+true && echo ok
+false || echo fallo
+ls; pwd; date
+ls -la |& less
+sleep 1 &
+! grep -q foo f.txt
+[ -d src ] && ls src
+test -n "$HOME" && echo definido
+(ls; df -h)
+{ date; uptime; }
+if grep -q foo f.txt; then echo si; else echo no; fi
+for f in *.log; do wc -l "$f"; done
+while true; do date; sleep 1; done
+uptime && free -h && df -h
+
+# Neutral wrappers with a safe inner command
+time ls -la
+nice -n 10 du -sh .
+timeout 5 ping -c 1 example.com
+watch -n 5 df -h
+
+# cd and : added to the allow list:
+# they only change the directory of the bash -c subshell or do nothing. They used to be in precaucion.txt.
+cd /tmp
+cd src && ls
+cd - && pwd
+: 
+
+# Adversarial review 2: environment prefixes
+LANG=C LC_ALL=C TZ=UTC ls
+TERM=xterm COLUMNS=80 ls
+A=1
+
+# Adversarial review 2: allow list by options (curl, wget, tar)
+curl -sSL https://x
+curl -sS -H 'A: b' -A ua --max-time 5 https://x
+curl -X GET https://x
+curl -o - https://x
+wget -qO- https://x
+wget -q -O - --timeout 5 https://x
+tar -tzvf a.tgz
+tar tvf a.tar
+
+# Adversarial review 2: ip and nmcli
+ip route get 1.1.1.1
+ip -s link
+nmcli
+nmcli device wifi list
+nmcli general hostname
+
+# Adversarial review 2: extended C, F and D sets
+echo x > /dev/tty
+
+# Adversarial review 2: new wrappers
+parallel echo ::: a b
+
+# Adversarial review 2: --help and --version
+ls --help
+git --help
+git --version
+
+# Adversarial review 2: awk
+awk '$1 > 5' f
+awk '/a|b/' f
+awk '{ if ($1 > 5) print }' f
+awk '{print ($1 > 5)}' f
+
+# Adversarial review 2: allow list of queries
+git tag --contains HEAD
+git branch --contains HEAD
+git config user.name
+git remote show origin
+git remote get-url origin
+git version
+git help log
+git reflog
+git stash show
+git cat-file -p HEAD
+git ls-remote origin
+git ls-tree HEAD
+git rev-list HEAD
+git show-ref
+git merge-base a b
+git for-each-ref
+git count-objects -v
+docker image ls
+docker container ls -a
+docker volume ls
+docker network ls
+docker compose ps
+docker stats
+crontab -l
+hostname -I
+hostname --fqdn
+iptables -L -n -v
+iptables -t nat -L --line-numbers
+ip6tables -S
+nft list ruleset
+ufw status
+ufw status verbose
+iptables -L -n
+
+# Adversarial review 2: awk
+awk '$3 > 1000 {print $1}' /etc/passwd
+
+# ifconfig queries
+ifconfig
+ifconfig -a
+ifconfig eth0
+
+# getfacl, timedatectl and apt-mark queries
+getfacl informe.txt
+getfacl -R /srv/compartido
+timedatectl
+timedatectl status
+timedatectl show
+timedatectl show-timesync --all
+timedatectl timesync-status
+timedatectl list-timezones
+timedatectl list-timezones | grep Madrid
+apt-mark showhold
+apt-mark showmanual
+apt-mark showauto | wc -l

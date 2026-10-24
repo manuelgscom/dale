@@ -1,0 +1,310 @@
+THIRD-PARTY NOTICES FOR dale 1.0.0
+==================================
+
+dale is distributed under the MIT license (see LICENSE). The release binary
+dale-linux-x86_64 also contains code from the third-party components listed
+below, each under its own license. This file reproduces their notices and
+license texts, as those licenses require.
+
+The model that dale downloads on first use (dale-0.8b, a fine-tune of
+Qwen3.5-0.8B) is not part of the binary. It is distributed separately under
+the Apache-2.0 license, with its own LICENSE file:
+https://huggingface.co/manuelgscom/dale-0.8b-GGUF
+
+
+Summary
+-------
+
+Component                      Version        License                         How it is used
+-----------------------------  -------------  ------------------------------  ---------------------------
+llama.cpp / ggml               v0.6.0         MIT                             statically linked
+  tinyBLAS (llamafile sgemm)   (in ggml)      MIT                             statically linked
+  YaRN RoPE scaling            (in ggml)      MIT                             statically linked
+nlohmann/json                  3.12.0         MIT                             compiled in (header-only)
+GCC runtime: libstdc++,        GCC 13.1.0     GPL-3.0 with the GCC Runtime    statically linked
+  libgcc, libgcc_eh                           Library Exception 3.1
+GNU C Library (glibc)          >= 2.29        LGPL-2.1-or-later               dynamically linked, not
+                                                                              distributed
+
+
+What is actually linked
+-----------------------
+
+This list is not guessed: it comes from the linker map of the release build
+(-Wl,-Map). Besides dale's own code, the binary is built from:
+
+  - llama.cpp: libllama.a, libggml.a, libggml-base.a and libggml-cpu.a
+    (CPU backend only; no GPU backends, no network code, no OpenMP).
+    Inside libggml-cpu.a, sgemm.cpp (tinyBLAS) and ops.cpp (YaRN) carry
+    their own notices, reproduced below.
+  - nlohmann/json, from llama.cpp's vendor/ directory. It is header-only,
+    so its code is compiled into dale's own object files.
+  - GCC 13 runtime, linked statically (-static-libstdc++ -static-libgcc):
+    libstdc++.a, libgcc.a, libgcc_eh.a and the crtbeginS.o / crtendS.o
+    startup files.
+  - glibc, linked dynamically (libc.so.6, libm.so.6, libpthread.so.0,
+    libdl.so.2, ld-linux-x86-64.so.2), plus its small startup objects
+    (crti.o, crtn.o, libc_nonshared.a). glibc itself is provided by the
+    user's system.
+
+Nothing else from llama.cpp's vendor/ directory is linked (no cpp-httplib,
+miniaudio, stb, subprocess.h or the hash libraries).
+
+
+================================================================================
+llama.cpp / ggml  (v0.6.0)
+https://github.com/ggml-org/llama.cpp
+================================================================================
+
+MIT License
+
+Copyright (c) 2023-2026 The ggml authors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+--------------------------------------------------------------------------------
+tinyBLAS (llamafile sgemm), part of ggml: ggml/src/ggml-cpu/llamafile/sgemm.cpp
+https://github.com/Mozilla-Ocho/llamafile
+--------------------------------------------------------------------------------
+
+Copyright 2024 Mozilla Foundation
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+--------------------------------------------------------------------------------
+YaRN RoPE scaling, part of ggml: ggml/src/ggml-cpu/ops.cpp
+Based on LlamaYaRNScaledRotaryEmbedding.py from https://github.com/jquesnelle/yarn
+--------------------------------------------------------------------------------
+
+MIT License
+
+Copyright (c) 2023 Jeffrey Quesnelle and Bowen Peng
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+================================================================================
+nlohmann/json  (JSON for Modern C++, 3.12.0)
+https://github.com/nlohmann/json
+================================================================================
+
+json.hpp also contains code from the following authors, distributed with it
+under the same MIT license:
+
+  - Copyright (c) 2008-2009 Björn Hoehrmann <bjoern@hoehrmann.de>
+    (UTF-8 decoder)
+  - Copyright (c) 2009 Florian Loitsch <https://florian.loitsch.com/>
+    (Grisu2 floating-point formatting)
+  - Copyright (c) 2016-2021 Evan Nemerson <evan@nemerson.com> (Hedley macros)
+  - Copyright (c) 2018 The Abseil Authors (integer sequence utilities)
+
+MIT License
+
+Copyright (c) 2013-2025 Niels Lohmann
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+================================================================================
+GCC runtime libraries: libstdc++, libgcc, libgcc_eh  (GCC 13.1.0)
+https://gcc.gnu.org/
+================================================================================
+
+These libraries are Copyright (C) Free Software Foundation, Inc. They are
+licensed under the GNU General Public License, version 3, with the GCC Runtime
+Library Exception, version 3.1. The Exception allows a program compiled with
+GCC to include these libraries and to be distributed under terms of the
+author's choice; dale is distributed under the MIT license on that basis.
+
+The full text of the GPL version 3 is available at
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+GCC RUNTIME LIBRARY EXCEPTION
+
+Version 3.1, 31 March 2009
+
+Copyright (C) 2009 Free Software Foundation, Inc. <http://fsf.org/>
+
+Everyone is permitted to copy and distribute verbatim copies of this
+license document, but changing it is not allowed.
+
+This GCC Runtime Library Exception ("Exception") is an additional
+permission under section 7 of the GNU General Public License, version
+3 ("GPLv3"). It applies to a given file (the "Runtime Library") that
+bears a notice placed by the copyright holder of the file stating that
+the file is governed by GPLv3 along with this Exception.
+
+When you use GCC to compile a program, GCC may combine portions of
+certain GCC header files and runtime libraries with the compiled
+program. The purpose of this Exception is to allow compilation of
+non-GPL (including proprietary) programs to use, in this way, the
+header files and runtime libraries covered by this Exception.
+
+0. Definitions.
+
+A file is an "Independent Module" if it either requires the Runtime
+Library for execution after a Compilation Process, or makes use of an
+interface provided by the Runtime Library, but is not otherwise based
+on the Runtime Library.
+
+"GCC" means a version of the GNU Compiler Collection, with or without
+modifications, governed by version 3 (or a specified later version) of
+the GNU General Public License (GPL) with the option of using any
+subsequent versions published by the FSF.
+
+"GPL-compatible Software" is software whose conditions of propagation,
+modification and use would permit combination with GCC in accord with
+the license of GCC.
+
+"Target Code" refers to output from any compiler for a real or virtual
+target processor architecture, in executable form or suitable for
+input to an assembler, loader, linker and/or execution
+phase. Notwithstanding that, Target Code does not include data in any
+format that is used as a compiler intermediate representation, or used
+for producing a compiler intermediate representation.
+
+The "Compilation Process" transforms code entirely represented in
+non-intermediate languages designed for human-written code, and/or in
+Java Virtual Machine byte code, into Target Code. Thus, for example,
+use of source code generators and preprocessors need not be considered
+part of the Compilation Process, since the Compilation Process can be
+understood as starting with the output of the generators or
+preprocessors.
+
+A Compilation Process is "Eligible" if it is done using GCC, alone or
+with other GPL-compatible software, or if it is done without using any
+work based on GCC. For example, using non-GPL-compatible Software to
+optimize any GCC intermediate representations would not qualify as an
+Eligible Compilation Process.
+
+1. Grant of Additional Permission.
+
+You have permission to propagate a work of Target Code formed by
+combining the Runtime Library with Independent Modules, even if such
+propagation would otherwise violate the terms of GPLv3, provided that
+all Target Code was generated by Eligible Compilation Processes. You
+may then convey such a combination under terms of your choice,
+consistent with the licensing of the Independent Modules.
+
+2. No Weakening of GCC Copyleft.
+
+The availability of this Exception does not imply any general
+presumption that third-party software is unaffected by the copyleft
+requirements of the license of GCC.
+
+
+================================================================================
+GNU C Library (glibc)
+https://www.gnu.org/software/libc/
+================================================================================
+
+glibc is licensed under the GNU Lesser General Public License, version 2.1 or
+later. dale links to it dynamically and does not distribute it: the binary
+uses the copy of glibc installed on the user's system. The small startup
+objects linked into every program (crti.o, crtn.o, libc_nonshared.a) are
+covered by the LGPL's special exception for them, which allows linking them
+into any program without restriction.
+
+
+################################################################################
+Repository only (not in the binary)
+################################################################################
+
+The source repository also contains the following component, used only to
+build and run the tests. It is not part of the release binary.
+
+
+================================================================================
+doctest  (2.5.3)
+https://github.com/doctest/doctest
+================================================================================
+
+The MIT License (MIT)
+
+Copyright (c) 2016-2023 Viktor Kirilov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -31,19 +31,63 @@ $ dale "find the files over 200 MB in this folder"
 
 ## Install
 
-Requirements: Linux on x86_64 with AVX2, glibc 2.29 or later, and `curl` or `wget` for the first model download.
+The quickest way is the prebuilt binary from the [latest release](https://github.com/manuelgscom/dale/releases/latest). There is nothing else to install: no Python, no GPU drivers, no root access. To compile it yourself instead, see [Build from source](#build-from-source).
+
+### 1. Check the requirements
+
+- Linux on x86_64 with a CPU that supports AVX2.
+- glibc 2.29 or later (Ubuntu 20.04, Debian 11, Fedora 30 or newer).
+- `curl` or `wget`, for the first model download.
+- No GPU needed. On Windows, use it through WSL 2.
 
 ```bash
-curl -LO https://github.com/manuelgscom/dale/releases/download/v1.0.0/dale-linux-x86_64
-curl -LO https://github.com/manuelgscom/dale/releases/download/v1.0.0/SHA256SUMS
-sha256sum -c --ignore-missing SHA256SUMS
-chmod +x dale-linux-x86_64 && mkdir -p ~/.local/bin && mv dale-linux-x86_64 ~/.local/bin/dale
+grep -q avx2 /proc/cpuinfo && echo "AVX2: OK" || echo "AVX2: not supported"
+ldd --version | head -n 1     # the last number is the glibc version
+```
+
+### 2. Download, verify and install
+
+```bash
+curl -LO https://github.com/manuelgscom/dale/releases/latest/download/dale-linux-x86_64
+curl -LO https://github.com/manuelgscom/dale/releases/latest/download/SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS     # must print: dale-linux-x86_64: OK
+chmod +x dale-linux-x86_64
+mkdir -p ~/.local/bin
+mv dale-linux-x86_64 ~/.local/bin/dale
+```
+
+This installs `dale` for your user only, in `~/.local/bin`.
+
+### 3. Check that your shell finds it
+
+```bash
+dale --version
+```
+
+If you get `dale: command not found`, open a new terminal. Most distributions add `~/.local/bin` to your `PATH` at login, but only once the folder exists. If a new terminal does not help, add it yourself:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 4. First run
+
+```bash
 dale "list the files bigger than 200 MB"
 ```
 
-On first use, `dale` asks before downloading the model (529 MB) from Hugging Face. It checks its SHA-256 and stores it in `~/.local/share/dale/models/` (or `$XDG_DATA_HOME/dale/models/`). After that it makes no network requests at all.
+The first time, `dale` asks before downloading the model (529 MB) from Hugging Face. It checks its SHA-256 and stores it in `~/.local/share/dale/models/` (or `$XDG_DATA_HOME/dale/models/`). After that it makes no network requests at all. If you already have the GGUF file, use `--model PATH` or the `model` key in the [configuration](#configuration) instead.
 
-On Windows, use it through WSL 2.
+### Update and uninstall
+
+- **Update:** repeat step 2. The model is downloaded again only if the new version uses a different one.
+- **Uninstall:**
+
+  ```bash
+  rm ~/.local/bin/dale
+  rm -rf ~/.local/share/dale ~/.config/dale     # downloaded model and configuration
+  ```
 
 ## Usage
 
@@ -93,38 +137,60 @@ The model answers with one JSON object: `{"type":"command|refuse|unsure","comman
 
 [`manuelgscom/dale-0.8b-GGUF`](https://huggingface.co/manuelgscom/dale-0.8b-GGUF) is a full fine-tune of Qwen3.5-0.8B, quantized to Q4_K_M (529 MB). On the public test set [`manuelgscom/dale-bash-test-v2`](https://huggingface.co/datasets/manuelgscom/dale-bash-test-v2), with 471 cases, it gets **79.4 %** right. Qwen3.5-9B and Gemma 4 E4B-it without fine-tuning get 62.8 %. A request takes about 1.7 s (median) on a mid-range 2020 laptop CPU with 4 cores and 8 threads, with no GPU.
 
-The model card describes the evaluation, the prompt contract and how to use the model directly with llama.cpp.
+The [model card](https://huggingface.co/manuelgscom/dale-0.8b-GGUF) describes the evaluation, the prompt contract and how to use the model directly with llama.cpp.
 
 ## Build from source
 
-You need Linux, CMake 3.28 or later, a C++20 compiler (GCC 13 or later) and git.
+Use this if you want to read or change the code. For everyday use, the [prebuilt binary](#install) is simpler. llama.cpp is compiled along with `dale`, so there are no other libraries to install.
+
+### 1. Install the build tools
+
+You need git, CMake 3.28 or later and GCC 13 or later.
+
+| Distribution | Command |
+|---|---|
+| Ubuntu 24.04 or later, Debian 13 or later | `sudo apt install build-essential cmake git` |
+| Fedora | `sudo dnf install gcc-c++ make cmake git` |
+| Arch Linux | `sudo pacman -S --needed base-devel cmake git` |
+
+Ubuntu 22.04 and Debian 12 ship an older CMake and GCC. There, use the prebuilt binary.
+
+### 2. Get the code
 
 ```bash
 git clone --recursive https://github.com/manuelgscom/dale.git
 cd dale
-cmake -B build
-cmake --build build -j"$(nproc)"
-ctest --test-dir build
 ```
 
-This is the development build. It is optimised for the CPU it is built on (`DALE_NATIVE=ON`), and it keeps the test hooks that the tests need. To build a binary for everyday use:
+`--recursive` also fetches llama.cpp (v0.6.0), which is a git submodule. If you cloned without it, run `git submodule update --init`.
+
+### 3. Build and install
 
 ```bash
-cmake -B build-release -DCMAKE_BUILD_TYPE=Release -DDALE_TEST_HOOKS=OFF
-cmake --build build-release -j"$(nproc)" --target dale
-./build-release/dale --version
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DDALE_TEST_HOOKS=OFF
+cmake --build build -j"$(nproc)" --target dale
+install -Dm755 build/dale ~/.local/bin/dale
+dale --version
 ```
 
-If you cloned without `--recursive`, run `git submodule update --init` (llama.cpp v0.6.0).
+The binary is optimised for the CPU of the machine where you build it. From here on, everything works as in [Install](#install): if `dale` is not found, see [step 3](#3-check-that-your-shell-finds-it); the first run downloads the model.
 
-### Tests
+### Development build and tests
 
-- `ctest --test-dir build` runs the unit tests (doctest) and the end-to-end tests in a pseudo-terminal. A fake engine stands in for the model, so these tests need no model file.
+```bash
+cmake -B build-dev
+cmake --build build-dev -j"$(nproc)"
+ctest --test-dir build-dev
+```
+
+The development build keeps the test hooks that the tests need, so do not use it as your everyday binary.
+
+- `ctest` runs the unit tests (doctest) and the end-to-end tests in a pseudo-terminal. A fake engine stands in for the model, so these tests need no model file.
 - The command lists in `tests/risk/` (`seguro.txt`, `precaucion.txt`, `peligro.txt`) fix the expected risk level of each command.
 - The tests that load a real model are kept apart:
 
   ```bash
-  DALE_TEST_MODEL=/path/to/dale-0.8b-1.0.0-Q4_K_M.gguf ctest --test-dir build -L model
+  DALE_TEST_MODEL=/path/to/dale-0.8b-1.0.0-Q4_K_M.gguf ctest --test-dir build-dev -L model
   ```
 
 ### Repository layout

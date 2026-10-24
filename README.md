@@ -16,6 +16,10 @@ $ dale "find the files over 200 MB in this folder"
 
 `dale` turns a request in **English or Spanish** into one bash command. It explains the command, rates its risk and runs it only if you confirm. Everything happens on your machine: a small language model fine-tuned for this single task, run on the CPU by a native C++ binary with [llama.cpp](https://github.com/ggml-org/llama.cpp) built in. No connection, no accounts, no API keys, no telemetry.
 
+https://github.com/user-attachments/assets/c674c03c-7c1c-42f1-aa2e-abc9944c0ea4
+
+*`dale` live: ask in plain English; it proposes the command, explains it, rates the risk and only runs it once you confirm. Real, unedited recording on a desktop CPU (about 1 s per request; 1.7 s on the laptop in [The model](#the-model)).*
+
 ## Features
 
 - **English and Spanish.** The explanation comes in the language of the request.
@@ -28,6 +32,10 @@ $ dale "find the files over 200 MB in this folder"
   - `suggest` shows the command and never runs it.
   - `confirm` (the default) asks before running it.
   - `auto` runs safe commands directly and asks for everything else.
+
+https://github.com/user-attachments/assets/2287c8ba-1873-479d-bae3-c15fbc173c51
+
+*Safety is decided by code, not by the model: caution with its reasons, danger with a confirmation word, and an honest "no" for non-commands or ambiguous requests. Real, unedited recording; nothing was run.*
 
 ## Install
 

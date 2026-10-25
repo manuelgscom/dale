@@ -1,5 +1,7 @@
 # dale
 
+[![Release](https://img.shields.io/github/v/release/manuelgscom/dale?logo=github&color=333333)](https://github.com/manuelgscom/dale/releases) [![License: MIT](https://img.shields.io/badge/license-MIT-333333)](LICENSE) ![Platform: Linux x86_64](https://img.shields.io/badge/platform-Linux%20x86__64-333333?logo=linux&logoColor=white) ![100% offline](https://img.shields.io/badge/100%25-offline-333333) ![Languages: English · Spanish](https://img.shields.io/badge/languages-English%20%C2%B7%20Spanish-333333) [![llama.cpp](https://img.shields.io/badge/built%20with-llama.cpp-333333)](https://github.com/ggml-org/llama.cpp) [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-dale--0.8b--GGUF-333333?logo=huggingface)](https://huggingface.co/manuelgscom/dale-0.8b-GGUF)
+
 **Natural language to Linux commands. 100% offline. One native binary.**
 
 ```bash

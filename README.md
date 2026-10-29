@@ -172,13 +172,13 @@ The model answers with one JSON object: `{"type":"command|refuse|unsure","comman
 
 ## The models
 
-The same task, contract and prompt in three sizes, all quantized to Q4_K_M. Scores are on the public test set [`manuelgscom/dale-bash-test-v2`](https://huggingface.co/datasets/manuelgscom/dale-bash-test-v2) (471 cases); the GPU ones were measured through `dale` itself, with Vulkan.
+The same task, contract and prompt in three sizes, all quantized to Q4_K_M. Scores are on the public test set [`manuelgscom/dale-bash-test-v2`](https://huggingface.co/datasets/manuelgscom/dale-bash-test-v2) (471 cases), all measured with `llama-server`, like the other models in the comparison. Through `dale` itself, with Vulkan, `dale-4b` and `dale-9b` score the same within two cases.
 
 | Model | Used by `dale` | Download | VRAM in use | Test v2 | Median time per request |
 |---|---|---|---|---|---|
 | [`dale-0.8b`](https://huggingface.co/manuelgscom/dale-0.8b-GGUF) | CPU (default) | 529 MB | — | **79.4 %** (374/471) | 1.7 s, mid-range 2020 laptop, 4 cores / 8 threads |
-| [`dale-4b`](https://huggingface.co/manuelgscom/dale-4b-GGUF) | GPU, ≥ 4 GiB free | 2.7 GB | ≈ 3.2 GiB | **86.6 %** (408/471) | 1.2 s, 16 GB desktop GPU |
-| [`dale-9b`](https://huggingface.co/manuelgscom/dale-9b-GGUF) | GPU, ≥ 8 GiB free, if you choose it | 5.6 GB | ≈ 5.4 GiB | **89.6 %** (422/471) | 1.7 s, 16 GB desktop GPU |
+| [`dale-4b`](https://huggingface.co/manuelgscom/dale-4b-GGUF) | GPU, ≥ 4 GiB free | 2.7 GB | ≈ 3.2 GiB | **87.0 %** (410/471) | 1.2 s, 16 GB desktop GPU |
+| [`dale-9b`](https://huggingface.co/manuelgscom/dale-9b-GGUF) | GPU, ≥ 8 GiB free, if you choose it | 5.6 GB | ≈ 5.4 GiB | **89.2 %** (420/471) | 1.7 s, 16 GB desktop GPU |
 
 They are fine-tunes of Qwen3.5-0.8B, Qwen3.5-4B and Qwen3.5-9B (the last one with a merged LoRA). For comparison, Qwen3.5-9B and Gemma 4 E4B-it without fine-tuning get 62.8 %. Times are warm requests; on the GPU, see the note on the first answers in [step 4](#4-first-run).
 

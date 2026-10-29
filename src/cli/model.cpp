@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>
 
+#include <algorithm>
 #include <cstdlib>
 
 namespace dale::cli {
@@ -60,8 +61,9 @@ ModelResolution resolve_model(const std::string& explicit_path, const std::strin
 }
 
 std::uint64_t size_mb(std::uint64_t bytes) {
-    constexpr std::uint64_t kMiB = 1024 * 1024;
-    return (bytes + kMiB - 1) / kMiB;
+    constexpr std::uint64_t kMB = 1000 * 1000;
+    if (bytes == 0) return 0;
+    return std::max<std::uint64_t>(1, (bytes + kMB / 2) / kMB);
 }
 
 }  // namespace dale::cli

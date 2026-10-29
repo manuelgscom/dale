@@ -377,7 +377,8 @@ infer::EngineResult suggest(Plan& plan, int threads, const infer::Request& reque
     config::end_gpu_run();
     if (plan.gpu_device.empty()) return result;
     if (result.error == "load_failed" || result.error == "decode_failed") {
-        err(std::string(tr(lang, Msg::GpuFailed)) + risk::escape_control(result.error_detail) + "\n");
+        err(std::string(tr(lang, plan.managed ? Msg::GpuFailed : Msg::GpuFailedOnce)) +
+            risk::escape_control(result.error_detail) + "\n");
         if (plan.managed) {
             config::save_setup(kCpuSetup);
             if (const std::string path = downloaded(fetch::kDefaultModel); !path.empty()) plan.model_path = path;
@@ -445,6 +446,10 @@ int run(int argc, char** argv) {
                 return 1;
             }
             const UiLang lang = ui_lang_from_env(cfg.config->lang);
+            if (cfg.config->device == config::Device::Cpu) {
+                err(tr(lang, Msg::SetupDeviceCpu));
+                return 0;
+            }
             std::signal(SIGINT, on_sigint);
             const Plan plan = first_run(args.json, lang);
             if (plan.exit_code >= 0) return plan.exit_code;

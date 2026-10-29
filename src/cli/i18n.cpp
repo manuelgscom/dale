@@ -94,13 +94,13 @@ constexpr Entry kTable[] = {
      "or download it from {} and use \"dale --model PATH …\"."},
     {Msg::DownloadDone, "Modelo descargado y verificado: ", "Model downloaded and verified: "},
     {Msg::GpuOffer,
-     "dale ha encontrado una GPU: {} ({} MB de VRAM libre).\n"
+     "dale ha encontrado una GPU: {} ({} MiB de VRAM libre).\n"
      "Con ella puede usar un modelo más grande y más preciso (se descarga solo una vez):\n"
      "  fichero: {}\n"
      "  tamaño:  {} MB\n"
      "  origen:  {}\n"
      "Si no, dale usará la CPU con el modelo pequeño.\n",
-     "dale found a GPU: {} ({} MB of free VRAM).\n"
+     "dale found a GPU: {} ({} MiB of free VRAM).\n"
      "With it, dale can use a larger, more accurate model (downloaded only once):\n"
      "  file:   {}\n"
      "  size:   {} MB\n"
@@ -108,12 +108,12 @@ constexpr Entry kTable[] = {
      "Otherwise dale will use the CPU with the small model.\n"},
     {Msg::GpuPrompt, "¿Descargarlo y usar la GPU? [S/n] ", "Download it and use the GPU? [Y/n] "},
     {Msg::GpuChoice,
-     "dale ha encontrado una GPU: {} ({} MB de VRAM libre).\n"
+     "dale ha encontrado una GPU: {} ({} MiB de VRAM libre).\n"
      "Con ella puede usar un modelo más grande y más preciso (se descarga solo una vez):\n"
      "  1) {}  {} MB  rápido\n"
      "  2) {}  {} MB  un poco más lento, pero más preciso\n"
      "  n) ninguno: dale usará la CPU con el modelo pequeño\n",
-     "dale found a GPU: {} ({} MB of free VRAM).\n"
+     "dale found a GPU: {} ({} MiB of free VRAM).\n"
      "With it, dale can use a larger, more accurate model (downloaded only once):\n"
      "  1) {}  {} MB  fast\n"
      "  2) {}  {} MB  a little slower, but more accurate\n"
@@ -133,6 +133,8 @@ constexpr Entry kTable[] = {
     {Msg::GpuFailed,
      "dale: la GPU ha fallado; a partir de ahora se usa la CPU (para volver a probarla: «dale --setup»): ",
      "dale: the GPU failed; dale uses the CPU from now on (to try it again: \"dale --setup\"): "},
+    {Msg::GpuFailedOnce, "dale: la GPU ha fallado; esta petición se resuelve en la CPU: ",
+     "dale: the GPU failed; this request runs on the CPU: "},
     {Msg::GpuCrashed,
      "dale: la última ejecución en la GPU no terminó; a partir de ahora se usa la CPU\n"
      "(para volver a probarla: «dale --setup»).",
@@ -151,6 +153,11 @@ constexpr Entry kTable[] = {
      "vulkan-icd-loader (Arch) and run \"dale --setup\"."},
     {Msg::SetupCpu, "dale usará la CPU con el modelo {}.\n", "dale will use the CPU with the model {}.\n"},
     {Msg::SetupGpu, "dale usará la GPU {} con el modelo {}.\n", "dale will use the GPU {} with the model {}.\n"},
+    {Msg::SetupDeviceCpu,
+     "dale: la configuración tiene «device = cpu», así que no se busca la GPU. Para que dale la\n"
+     "detecte, quita esa línea o pon «device = auto».\n",
+     "dale: the configuration has \"device = cpu\", so the GPU is not looked for. For dale to\n"
+     "detect it, remove that line or set \"device = auto\".\n"},
     {Msg::Refuse, "Esto no se resuelve con un comando: ", "This can't be solved with a command: "},
     {Msg::Unsure, "No estoy seguro: ", "I'm not sure: "},
     {Msg::LevelSafe, "seguro", "safe"},

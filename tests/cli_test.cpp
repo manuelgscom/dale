@@ -229,10 +229,14 @@ TEST_CASE("resolución del modelo") {
     CHECK(resolve_model("", "", spec).status == S::NoDir);
     fs::remove_all(dir);
 
+    // Decimal megabytes, as Hugging Face shows them; at least 1 for a non-empty file.
     CHECK(size_mb(0) == 0);
     CHECK(size_mb(3) == 1);
-    CHECK(size_mb(1024 * 1024) == 1);
-    CHECK(size_mb(811843840ULL) == 775);
+    CHECK(size_mb(1499999) == 1);
+    CHECK(size_mb(1500000) == 2);
+    CHECK(size_mb(529297952ULL) == 529);
+    CHECK(size_mb(2708805056ULL) == 2709);
+    CHECK(size_mb(5629109760ULL) == 5629);
 }
 
 TEST_CASE("json_report") {

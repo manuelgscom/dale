@@ -925,7 +925,7 @@ TEST_CASE("GPU: con 8 GiB libres o más pregunta dale-4b o dale-9b; Intro descar
     sb.vars["DALE_FAKE_GPU"] = kFakeGpu;
     auto s = sb.launch();
     REQUIRE(s->wait_for(kChoicePrompt));
-    CHECK(contains(s->output(), "dale ha encontrado una GPU: NVIDIA Fake (12000 MB de VRAM libre)."));
+    CHECK(contains(s->output(), "dale ha encontrado una GPU: NVIDIA Fake (12000 MiB de VRAM libre)."));
     CHECK(contains(s->output(), "1) " + k4B + "  1 MB  rápido"));
     CHECK(contains(s->output(), "2) " + k9B + "  1 MB  un poco más lento, pero más preciso"));
     CHECK(contains(s->output(), "n) ninguno: dale usará la CPU con el modelo pequeño"));
@@ -1025,7 +1025,7 @@ TEST_CASE("GPU: con 6000 MB libres se ofrece dale-4b") {
         const bool es = std::string(lang) == "es_ES.UTF-8";
         auto s = sb.launch();
         REQUIRE(s->wait_for(es ? kGpuPrompt : "Download it and use the GPU? [Y/n]"));
-        CHECK(contains(s->output(), es ? "AMD Fake (6000 MB de VRAM libre)" : "AMD Fake (6000 MB of free VRAM)"));
+        CHECK(contains(s->output(), es ? "AMD Fake (6000 MiB de VRAM libre)" : "AMD Fake (6000 MiB of free VRAM)"));
         CHECK(contains(s->output(), k4B));
         CHECK_FALSE(contains(s->output(), k9B));
         s->write("n\n");
@@ -1080,7 +1080,8 @@ TEST_CASE("GPU: sin terminal no pregunta ni descarga; usa el modelo de GPU si ya
     sb.vars["DALE_FAKE_GPU_ERROR"] = "load_failed";
     const auto f = sb.pipes({"--json", "di hola"});
     CHECK(exited_with(f.status, 0));
-    CHECK(contains(f.err, "la GPU ha fallado"));
+    CHECK(contains(f.err, "dale: la GPU ha fallado; esta petición se resuelve en la CPU: "));
+    CHECK_FALSE(contains(f.err, "a partir de ahora"));
     CHECK(contains(f.out, "\"device\":\"cpu\""));
     CHECK_FALSE(sb.exists(kSetupFile));
 }
@@ -1255,6 +1256,14 @@ TEST_CASE("GPU: device = cpu no detecta ni pregunta; device = gpu la fuerza") {
         CHECK(j.err.empty());
         CHECK(contains(j.out, "\"model\":\"" + k08B + "\""));
         CHECK(contains(j.out, "\"device\":\"cpu\",\"gpu\":null"));
+        // --setup neither detects nor changes the saved setup.
+        const std::string before = setup_of(sb);
+        const auto setup = sb.pipes({"--setup"});
+        CHECK(exited_with(setup.status, 0));
+        CHECK(setup.out.empty());
+        CHECK(contains(setup.err, "la configuración tiene «device = cpu», así que no se busca la GPU"));
+        CHECK_FALSE(contains(setup.err, "NVIDIA Fake"));
+        CHECK(setup_of(sb) == before);
     }
     {
         Sandbox sb;
@@ -1285,6 +1294,19 @@ TEST_CASE("GPU: device = cpu no detecta ni pregunta; device = gpu la fuerza") {
         CHECK(contains(big.out, "\"model\":\"" + k9B + "\""));
         CHECK(contains(big.out, "\"device\":\"gpu\",\"gpu\":\"NVIDIA Fake\""));
         CHECK_FALSE(sb.exists(kSetupFile));
+
+        // Forced and failing: this request on the CPU, nothing saved, the GPU again next time.
+        sb.vars["DALE_FAKE_GPU_ERROR"] = "load_failed";
+        sb.vars["LANG"] = "en_US.UTF-8";
+        const auto fail = sb.pipes({"--json", "di hola"});
+        CHECK(exited_with(fail.status, 0));
+        CHECK(contains(fail.err, "dale: the GPU failed; this request runs on the CPU: "));
+        CHECK_FALSE(contains(fail.err, "from now on"));
+        CHECK(contains(fail.out, "\"device\":\"cpu\""));
+        CHECK_FALSE(sb.exists(kSetupFile));
+        sb.vars.erase("DALE_FAKE_GPU_ERROR");
+        const auto again = sb.pipes({"--json", "di hola"});
+        CHECK(contains(again.out, "\"device\":\"gpu\",\"gpu\":\"NVIDIA Fake\""));
     }
 }
 

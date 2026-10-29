@@ -43,7 +43,8 @@ struct ModelResolution {
 ModelResolution resolve_model(const std::string& explicit_path, const std::string& models_dir,
                               const ModelSpec& spec);
 
-// Megabytes (MiB) rounded up, for the dialog.
+// Megabytes (10^6 bytes, as Hugging Face shows them) rounded to the nearest, at least 1 for a
+// non-empty file, for the dialog.
 std::uint64_t size_mb(std::uint64_t bytes);
 
 }  // namespace dale::cli

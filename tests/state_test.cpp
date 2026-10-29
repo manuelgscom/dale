@@ -64,7 +64,7 @@ Setup gpu_setup() {
     Setup s;
     s.device = Device::Gpu;
     s.model = "dale-9b-1.0.0-Q4_K_M.gguf";
-    s.gpu = "NVIDIA GeForce RTX 5070 Ti";
+    s.gpu = "Example GPU";
     s.vram_free_mib = 12000;
     return s;
 }
@@ -90,7 +90,7 @@ TEST_CASE("format_setup y parse_setup: ida y vuelta") {
     CHECK(text.rfind("# ", 0) == 0);
     CHECK(text.find("device = gpu\n") != std::string::npos);
     CHECK(text.find("model = dale-9b-1.0.0-Q4_K_M.gguf\n") != std::string::npos);
-    CHECK(text.find("gpu = NVIDIA GeForce RTX 5070 Ti\n") != std::string::npos);
+    CHECK(text.find("gpu = Example GPU\n") != std::string::npos);
     CHECK(text.find("vram_free_mib = 12000\n") != std::string::npos);
     const auto back = parse_setup(text);
     REQUIRE(back);

@@ -138,11 +138,11 @@ TEST_CASE("choose: forzada con poca VRAM usa dale-0.8b en la GPU") {
 TEST_CASE("detect_gpus: DALE_FAKE_GPU") {
     EnvGuard fake("DALE_FAKE_GPU");
 
-    fake.set("NVIDIA GeForce RTX 5070 Ti:12000:16000;Intel UHD 770:2048:8192:igpu");
+    fake.set("Example GPU:12000:16000;Intel UHD 770:2048:8192:igpu");
     const std::vector<Gpu> two = detect_gpus();
     REQUIRE(two.size() == 2);
     CHECK(two[0].name == "Fake0");
-    CHECK(two[0].description == "NVIDIA GeForce RTX 5070 Ti");
+    CHECK(two[0].description == "Example GPU");
     CHECK(two[0].free_bytes == 12000 * kMiB);
     CHECK(two[0].total_bytes == 16000 * kMiB);
     CHECK_FALSE(two[0].integrated);
@@ -165,7 +165,7 @@ TEST_CASE("detect_gpus: DALE_FAKE_GPU") {
     CHECK(some[1].name == "Fake1");
     CHECK(some[1].free_bytes == 300 * kMiB);
 
-    // Through choose(): the fake 5070 Ti gets dale-9b.
+    // Through choose(): the fake dedicated GPU gets dale-9b.
     fake.set("Intel UHD:30000:32000:igpu;RTX:12000:16000");
     const std::vector<Gpu> gpus = detect_gpus();
     const Choice c = choose(gpus, false);

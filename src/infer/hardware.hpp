@@ -11,7 +11,7 @@ namespace dale::infer {
 
 struct Gpu {
     std::string name;         // ggml device name ("Vulkan0"); what LlamaOptions::gpu_device takes
-    std::string description;  // "NVIDIA GeForce RTX 5070 Ti"
+    std::string description;  // "Example GPU"
     bool integrated = false;  // shares the system RAM (iGPU)
     std::uint64_t free_bytes = 0;
     std::uint64_t total_bytes = 0;
@@ -28,7 +28,7 @@ std::vector<Gpu> detect_gpus();
 bool gpu_device_node_present();
 
 // Free VRAM needed by each GPU model: what it takes in dale with a 2048 context (about 3.2 GiB
-// for dale-4b and 5.3 GiB for dale-9b) plus a margin.
+// for dale-4b and 5.4 GiB for dale-9b, peak of the process) plus a margin.
 inline constexpr std::uint64_t kGiB = 1024ull * 1024 * 1024;
 inline constexpr std::uint64_t kMinFree9B = 8 * kGiB;
 inline constexpr std::uint64_t kMinFree4B = 4 * kGiB;

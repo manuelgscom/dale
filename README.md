@@ -42,7 +42,7 @@ https://github.com/user-attachments/assets/2287c8ba-1873-479d-bae3-c15fbc173c51
 
 ## Install
 
-The quickest way is the prebuilt binary from the [latest release](https://github.com/manuelgscom/dale/releases/latest). It is one file of about 51 MB for both CPU and GPU, and there is nothing else to install: no Python, no root access, no GPU drivers for the CPU. To compile it yourself instead, see [Build from source](#build-from-source).
+The quickest way is the prebuilt binary from the [latest release](https://github.com/manuelgscom/dale/releases/latest). It is one file of about 51 MB for both CPU and GPU, and there is nothing else to install: no Python, no root access and, for the CPU, no GPU drivers. To compile it yourself instead, see [Build from source](#build-from-source).
 
 ### 1. Check the requirements
 
@@ -50,7 +50,7 @@ The quickest way is the prebuilt binary from the [latest release](https://github
 - glibc 2.29 or later (Ubuntu 20.04, Debian 11, Fedora 30 or newer).
 - `curl` or `wget`, for the first model download.
 - On Windows, use it through WSL 2.
-- **Optional, for the GPU:** a GPU with at least 4 GiB of free VRAM (NVIDIA, AMD or Intel), its driver, and the Vulkan loader `libvulkan.so.1` (`libvulkan1` on Debian and Ubuntu, `vulkan-loader` on Fedora, `vulkan-icd-loader` on Arch). Almost every desktop already has the loader, since Mesa, browsers, Steam and VS Code bring it. It may be missing on a server with only the NVIDIA driver; then `dale` uses the CPU and tells you what to install.
+- **Optional, for the GPU:** a dedicated GPU with at least 4 GiB of free VRAM (NVIDIA, AMD or Intel), its driver, and the Vulkan loader `libvulkan.so.1` (`libvulkan1` on Debian and Ubuntu, `vulkan-loader` on Fedora, `vulkan-icd-loader` on Arch). Almost every desktop already has the loader, since Mesa, browsers, Steam and VS Code bring it. It may be missing on a server with only the NVIDIA driver; then `dale` uses the CPU and tells you what to install.
 
 ```bash
 grep -q avx2 /proc/cpuinfo && echo "AVX2: OK" || echo "AVX2: not supported"
@@ -106,7 +106,7 @@ It always asks before downloading a model from Hugging Face (529 MB, 2.7 GB or 5
 - The choice is saved in `~/.local/state/dale/setup` (or `$XDG_STATE_HOME/dale/setup`). `dale --setup` detects the GPU and asks again.
 - On the GPU, the first answers take a few seconds longer while the shaders are compiled. This happens once, and again on the first request after the computer starts.
 - Integrated GPUs are never chosen automatically; `device = gpu` in the [configuration](#configuration) forces the GPU.
-- If the GPU fails to load the model or to decode, `dale` answers that request on the CPU. After a GPU error or crash it uses the CPU from then on; `dale --setup` tries the GPU again.
+- If the GPU fails to load the model or to decode, `dale` answers that request on the CPU. After a GPU error or crash it uses the CPU from then on (with `device = auto`); `dale --setup` tries the GPU again.
 - Without a terminal, or with `--json`, `dale` neither asks nor downloads.
 
 If you already have a GGUF file, use `--model PATH` or the `model` key in the [configuration](#configuration) instead.
@@ -118,7 +118,7 @@ If you already have a GGUF file, use `--model PATH` or the `model` key in the [c
 
   ```bash
   rm ~/.local/bin/dale
-  rm -rf ~/.local/share/dale ~/.config/dale ~/.local/state/dale     # models, configuration and first-run choice
+  rm -rf ~/.local/share/dale ~/.config/dale ~/.local/state/dale ~/.cache/dale   # models, configuration, first-run choice and cache
   ```
 
 ## Usage
@@ -128,7 +128,7 @@ dale <request…>
 dale --model PATH <request…>   # use this GGUF file instead of the downloaded model
 dale --setup                   # detect the GPU and choose the model again
 dale --help
-dale --version                 # also shows the device and model in use
+dale --version                 # also shows the choice saved on the first run
 ```
 
 Answers at the prompt: `y` runs the command, `n` cancels, `e` opens it for editing and `c` copies it to the clipboard. In tmux, copying to the clipboard needs `set-clipboard on`.
@@ -143,14 +143,14 @@ mode = confirm
 # auto | en | es (language of the interface)
 lang = auto
 # a GGUF file instead of the downloaded model
-model = ~/models/dale-0.8b-1.0.0-Q4_K_M.gguf
-# inference threads (1-256)
-threads = 4
+# model = ~/models/dale-0.8b-1.0.0-Q4_K_M.gguf
+# inference threads (1-256; by default, chosen by dale)
+# threads = 4
 # auto | cpu | gpu (auto follows the first-run choice)
 device = auto
 ```
 
-`device = cpu` never touches the GPU. `device = gpu` uses the GPU with the most free VRAM, integrated ones included, and the model that fits it.
+`device = cpu` keeps every request on the CPU. `device = gpu` uses the dedicated GPU with the most free VRAM (an integrated one if there is none) and the largest model that fits it.
 
 ## How it works
 

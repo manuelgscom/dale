@@ -12,7 +12,14 @@ namespace dale::infer {
 struct LlamaOptions {
     std::string model_path;
     int threads = 4;
+    // ggml device name of the GPU (Gpu::name, "Vulkan0"); the whole model goes to it.
+    // Empty = CPU only, even if the Vulkan backend is registered.
+    std::string gpu_device;
 };
+
+// llama.cpp/ggml logs: silent, or to stderr with DALE_DEBUG=1. Called before any llama/ggml call
+// that may log (loading, GPU detection).
+void set_llama_logging();
 
 // The model is loaded lazily on the first suggest(); creating the engine does not touch disk.
 // The prompt prefix state is saved in $XDG_CACHE_HOME/dale (or ~/.cache/dale) and reused in

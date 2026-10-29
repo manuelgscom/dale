@@ -13,6 +13,7 @@ struct ReportInput {
     int threads = 0;
     std::string request;  // already normalized
     std::string context;  // context line
+    std::string gpu;      // GPU description; empty = CPU
 };
 
 // JSON object on one line, no trailing "\n". Keys in schema order. response and risk

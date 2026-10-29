@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(dale VERSION 1.0.0 LANGUAGES CXX)
+project(dale VERSION 1.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -35,9 +35,32 @@ set(LLAMA_OPENSSL        OFF CACHE BOOL "" FORCE)
 set(GGML_NATIVE   ${DALE_NATIVE} CACHE BOOL "" FORCE)
 option(DALE_OPENMP "OpenMP in ggml (for benchmarking only; OFF by default)" OFF)
 set(GGML_OPENMP   ${DALE_OPENMP} CACHE BOOL "" FORCE)
+# Vulkan backend (needs the Vulkan headers, glslc and SPIRV-Headers to build). The binary does not
+# link libvulkan: dale_vk_shim (src/vulkan/vulkan_shim.cpp) defines the few Vulkan functions
+# ggml-vulkan imports and forwards them to libvulkan.so.1 opened with dlopen, so dale still
+# starts on machines without a Vulkan loader. The Vulkan::Vulkan target defined here (headers +
+# shim) takes the place of the one FindVulkan would create (it only creates it if missing).
+option(DALE_VULKAN "Vulkan GPU backend (loaded at run time)" OFF)
+set(GGML_VULKAN ${DALE_VULKAN} CACHE BOOL "" FORCE)
+if(DALE_VULKAN)
+  find_path(DALE_VULKAN_INCLUDE_DIR vulkan/vulkan.h HINTS "$ENV{VULKAN_SDK}/include" REQUIRED)
+  add_library(dale_vk_shim STATIC src/vulkan/vulkan_shim.cpp)
+  target_include_directories(dale_vk_shim PRIVATE "${CMAKE_SOURCE_DIR}/src")
+  target_include_directories(dale_vk_shim SYSTEM PRIVATE "${DALE_VULKAN_INCLUDE_DIR}")
+  target_link_libraries(dale_vk_shim PRIVATE ${CMAKE_DL_LIBS})
+  dale_warnings(dale_vk_shim)
+  add_library(Vulkan::Vulkan INTERFACE IMPORTED GLOBAL)
+  set_target_properties(Vulkan::Vulkan PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${DALE_VULKAN_INCLUDE_DIR}"
+    INTERFACE_LINK_LIBRARIES dale_vk_shim)
+endif()
 add_subdirectory(third_party/llama.cpp EXCLUDE_FROM_ALL SYSTEM)
 # Unoptimized, llama.cpp exceeds the inference time limit: -O2 in Debug as well.
-foreach(t ggml-base ggml-cpu ggml llama)
+set(DALE_GGML_TARGETS ggml-base ggml-cpu ggml llama)
+if(DALE_VULKAN)
+  list(APPEND DALE_GGML_TARGETS ggml-vulkan)
+endif()
+foreach(t IN LISTS DALE_GGML_TARGETS)
   target_compile_options(${t} PRIVATE $<$<CONFIG:Debug>:-O2>)
 endforeach()
 
@@ -56,7 +79,11 @@ target_include_directories(dale_core PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(dale_core PUBLIC llama vendor::nlohmann)
 target_compile_definitions(dale_core PUBLIC
   DALE_VERSION="${PROJECT_VERSION}"
-  DALE_TEST_HOOKS=$<BOOL:${DALE_TEST_HOOKS}>)
+  DALE_TEST_HOOKS=$<BOOL:${DALE_TEST_HOOKS}>
+  DALE_VULKAN=$<BOOL:${DALE_VULKAN}>)
+if(DALE_VULKAN)
+  target_link_libraries(dale_core PUBLIC dale_vk_shim)
+endif()
 if(NOT DALE_MODEL_URL STREQUAL "")
   target_compile_definitions(dale_core PUBLIC DALE_MODEL_URL="${DALE_MODEL_URL}")
 endif()

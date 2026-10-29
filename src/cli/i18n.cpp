@@ -24,10 +24,11 @@ constexpr Entry kTable[] = {
      "  -h, --help     muestra esta ayuda\n"
      "  --version      muestra la versión\n"
      "  --model RUTA   usa este fichero GGUF en lugar del modelo descargado\n"
+     "  --setup        vuelve a detectar la GPU y a elegir el modelo\n"
      "\n"
      "Respuestas: s = ejecutar, n = no, e = editar, c = copiar al portapapeles.\n"
-     "Configuración: ~/.config/dale/config, con «mode = suggest|confirm|auto»\n"
-     "y «lang = auto|es|en».\n"
+     "Configuración: ~/.config/dale/config, con «mode = suggest|confirm|auto»,\n"
+     "«lang = auto|es|en» y «device = auto|cpu|gpu».\n"
      "En tmux, copiar al portapapeles necesita «set-clipboard on».\n"
      "\n"
      "Opciones internas para evaluación:\n"
@@ -43,10 +44,11 @@ constexpr Entry kTable[] = {
      "  -h, --help     show this help\n"
      "  --version      show the version\n"
      "  --model PATH   use this GGUF file instead of the downloaded model\n"
+     "  --setup        detect the GPU and choose the model again\n"
      "\n"
      "Answers: y = run, n = no, e = edit, c = copy to clipboard.\n"
-     "Configuration: ~/.config/dale/config, with \"mode = suggest|confirm|auto\"\n"
-     "and \"lang = auto|es|en\".\n"
+     "Configuration: ~/.config/dale/config, with \"mode = suggest|confirm|auto\",\n"
+     "\"lang = auto|es|en\" and \"device = auto|cpu|gpu\".\n"
      "In tmux, copying to the clipboard needs \"set-clipboard on\".\n"
      "\n"
      "Internal options for evaluation:\n"
@@ -91,6 +93,64 @@ constexpr Entry kTable[] = {
      "dale: the model {} ({} MB) is missing. Run dale in a terminal (without --json) to download it,\n"
      "or download it from {} and use \"dale --model PATH …\"."},
     {Msg::DownloadDone, "Modelo descargado y verificado: ", "Model downloaded and verified: "},
+    {Msg::GpuOffer,
+     "dale ha encontrado una GPU: {} ({} MB de VRAM libre).\n"
+     "Con ella puede usar un modelo más grande y más preciso (se descarga solo una vez):\n"
+     "  fichero: {}\n"
+     "  tamaño:  {} MB\n"
+     "  origen:  {}\n"
+     "Si no, dale usará la CPU con el modelo pequeño.\n",
+     "dale found a GPU: {} ({} MB of free VRAM).\n"
+     "With it, dale can use a larger, more accurate model (downloaded only once):\n"
+     "  file:   {}\n"
+     "  size:   {} MB\n"
+     "  source: {}\n"
+     "Otherwise dale will use the CPU with the small model.\n"},
+    {Msg::GpuPrompt, "¿Descargarlo y usar la GPU? [S/n] ", "Download it and use the GPU? [Y/n] "},
+    {Msg::GpuChoice,
+     "dale ha encontrado una GPU: {} ({} MB de VRAM libre).\n"
+     "Con ella puede usar un modelo más grande y más preciso (se descarga solo una vez):\n"
+     "  1) {}  {} MB  rápido\n"
+     "  2) {}  {} MB  un poco más lento, pero más preciso\n"
+     "  n) ninguno: dale usará la CPU con el modelo pequeño\n",
+     "dale found a GPU: {} ({} MB of free VRAM).\n"
+     "With it, dale can use a larger, more accurate model (downloaded only once):\n"
+     "  1) {}  {} MB  fast\n"
+     "  2) {}  {} MB  a little slower, but more accurate\n"
+     "  n) none: dale will use the CPU with the small model\n"},
+    {Msg::GpuChoicePrompt, "¿Cuál? [1/2/n] (Intro = 1) ", "Which one? [1/2/n] (Enter = 1) "},
+    {Msg::GpuWarmup,
+     "Las primeras respuestas en la GPU pueden tardar unos segundos más mientras se prepara\n"
+     "(solo la primera vez), y también la primera después de encender el equipo.\n",
+     "The first answers on the GPU may take a few seconds longer while it gets ready (only the\n"
+     "first time), and so may the first one after the computer starts.\n"},
+    {Msg::GpuDeclined,
+     "dale usará la CPU. Para volver a elegir: «dale --setup».",
+     "dale will use the CPU. To choose again: \"dale --setup\"."},
+    {Msg::GpuDownloadFailed,
+     "dale: de momento se usa la CPU; vuelve a intentarlo con «dale --setup».",
+     "dale: using the CPU for now; try again with \"dale --setup\"."},
+    {Msg::GpuFailed,
+     "dale: la GPU ha fallado; a partir de ahora se usa la CPU (para volver a probarla: «dale --setup»): ",
+     "dale: the GPU failed; dale uses the CPU from now on (to try it again: \"dale --setup\"): "},
+    {Msg::GpuCrashed,
+     "dale: la última ejecución en la GPU no terminó; a partir de ahora se usa la CPU\n"
+     "(para volver a probarla: «dale --setup»).",
+     "dale: the last run on the GPU did not finish; dale uses the CPU from now on\n"
+     "(to try it again: \"dale --setup\")."},
+    {Msg::GpuMissing, "dale: no se encuentra la GPU {}; esta vez se usa la CPU.",
+     "dale: GPU {} not found; using the CPU this time."},
+    {Msg::NoGpuFound, "dale: «device = gpu», pero no hay ninguna GPU con Vulkan; se usa la CPU.",
+     "dale: \"device = gpu\", but there is no GPU with Vulkan; using the CPU."},
+    {Msg::NoVulkanLoader,
+     "dale: hay una GPU, pero no se ha podido cargar Vulkan (libvulkan.so.1); se usa la CPU.\n"
+     "Para usar la GPU, instala libvulkan1 (Debian, Ubuntu), vulkan-loader (Fedora) o\n"
+     "vulkan-icd-loader (Arch) y ejecuta «dale --setup».",
+     "dale: there is a GPU, but Vulkan (libvulkan.so.1) could not be loaded; using the CPU.\n"
+     "To use the GPU, install libvulkan1 (Debian, Ubuntu), vulkan-loader (Fedora) or\n"
+     "vulkan-icd-loader (Arch) and run \"dale --setup\"."},
+    {Msg::SetupCpu, "dale usará la CPU con el modelo {}.\n", "dale will use the CPU with the model {}.\n"},
+    {Msg::SetupGpu, "dale usará la GPU {} con el modelo {}.\n", "dale will use the GPU {} with the model {}.\n"},
     {Msg::Refuse, "Esto no se resuelve con un comando: ", "This can't be solved with a command: "},
     {Msg::Unsure, "No estoy seguro: ", "I'm not sure: "},
     {Msg::LevelSafe, "seguro", "safe"},

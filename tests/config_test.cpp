@@ -126,6 +126,27 @@ TEST_CASE("lang: válidos e inválidos") {
     CHECK(r.error_en == "~/.config/dale/config:1: invalid value for lang: \"fr\" (valid: auto, es, en)");
 }
 
+TEST_CASE("device: válidos, por defecto e inválidos") {
+    CHECK(parse("").config->device == Device::Auto);
+    CHECK(parse("device = auto").config->device == Device::Auto);
+    CHECK(parse("device = cpu").config->device == Device::Cpu);
+    CHECK(parse("device = gpu").config->device == Device::Gpu);
+    CHECK(parse("  device\t=\tgpu  \r\n").config->device == Device::Gpu);
+    for (const char* text : {"device = GPU", "device = vulkan", "device = cuda", "device = gpu cpu", "device ="}) {
+        CAPTURE(text);
+        parse_err(text, 1);
+    }
+    const ConfigResult r = parse("device = vulkan");
+    CHECK(r.error == "~/.config/dale/config:1: valor no válido para device: \"vulkan\" (válidos: auto, cpu, gpu)");
+    CHECK(r.error_en == "~/.config/dale/config:1: invalid value for device: \"vulkan\" (valid: auto, cpu, gpu)");
+    parse_err("device = cpu\ndevice = gpu\n", 2);
+    const ConfigResult all = parse("mode = suggest\ndevice = cpu\nthreads = 2\n");
+    REQUIRE(all.config);
+    CHECK(all.config->device == Device::Cpu);
+    CHECK(all.config->mode == Mode::Suggest);
+    CHECK(all.config->threads == 2);
+}
+
 TEST_CASE("model: rutas, ~/ y # dentro del valor") {
     CHECK(parse("model = /opt/m.gguf").config->model == "/opt/m.gguf");
     CHECK(parse("model = rel/m.gguf").config->model == "rel/m.gguf");
@@ -195,8 +216,8 @@ TEST_CASE("BOM UTF-8 al principio se ignora") {
 
 TEST_CASE("clave desconocida") {
     const ConfigResult r = parse_err("mode = auto\n\nmodo = auto\n", 3);
-    CHECK(r.error == "~/.config/dale/config:3: clave desconocida: \"modo\" (válidas: mode, lang, model, threads)");
-    CHECK(r.error_en == "~/.config/dale/config:3: unknown key: \"modo\" (valid: mode, lang, model, threads)");
+    CHECK(r.error == "~/.config/dale/config:3: clave desconocida: \"modo\" (válidas: mode, lang, model, threads, device)");
+    CHECK(r.error_en == "~/.config/dale/config:3: unknown key: \"modo\" (valid: mode, lang, model, threads, device)");
     parse_err("MODE = auto", 1);
     parse_err("= auto", 1);
     parse_err("mo de = auto", 1);

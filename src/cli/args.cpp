@@ -22,6 +22,8 @@ Args parse_args(const std::vector<std::string>& args) {
                 out.json = true;
             } else if (a == "--print-prompt") {
                 out.print_prompt = true;
+            } else if (a == "--setup") {
+                out.setup = true;
             } else if (a == "--model" || std::string_view(a).starts_with("--model=")) {
                 std::string value;
                 if (a == "--model") {
@@ -54,6 +56,8 @@ Args parse_args(const std::vector<std::string>& args) {
         out.action = Args::Action::Help;
     } else if (version) {
         out.action = Args::Action::Version;
+    } else if (out.setup && out.request.empty()) {
+        out.action = Args::Action::Setup;
     } else if (out.request.empty()) {
         out.action = Args::Action::NoRequest;
     } else {

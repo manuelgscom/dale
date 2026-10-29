@@ -42,6 +42,12 @@ const char* test_model() {
     return (m != nullptr && *m != '\0') ? m : nullptr;
 }
 
+// Engine options for the "model" suite: on the GPU named by DALE_TEST_GPU ("Vulkan0"), if set.
+LlamaOptions model_options(const char* model) {
+    const char* gpu = std::getenv("DALE_TEST_GPU");
+    return {model, default_threads(), gpu != nullptr ? gpu : ""};
+}
+
 // Saves an environment variable and restores it when going out of scope.
 class EnvGuard {
 public:
@@ -165,7 +171,7 @@ TEST_CASE("default_threads: entre 1 y los CPU de la máscara") {
 
 TEST_CASE("modelo inexistente: load_failed con la ruta") {
     const std::string path = "/nonexistent/dale/model.gguf";
-    auto engine = make_llama_engine({path, 1});
+    auto engine = make_llama_engine({path, 1, ""});
     for (int i = 0; i < 2; ++i) {  // the second attempt returns the same error without reloading
         EngineResult r = engine->suggest({"os=linux", "list files"});
         CHECK_FALSE(r.suggestion.has_value());
@@ -223,7 +229,7 @@ TEST_CASE("genera con el modelo real") {
     TempDir tmp;
     EnvGuard xdg("XDG_CACHE_HOME");
     xdg.set(tmp.path.string());
-    auto engine = make_llama_engine({model, default_threads()});
+    auto engine = make_llama_engine(model_options(model));
     const Request request{kContext, "list the files in the current directory"};
 
     EngineResult r = engine->suggest(request);
@@ -274,7 +280,7 @@ TEST_CASE("caché del prefijo: la misma salida con y sin caché, también si est
     xdg.set((tmp.path / "file" / "cache").string());
     std::vector<std::string> expected;
     {
-        auto engine = make_llama_engine({model, default_threads()});
+        auto engine = make_llama_engine(model_options(model));
         expected = raws(*engine, requests);
     }
     for (const std::string& raw : expected) CHECK(raw.rfind('{', 0) == 0);
@@ -283,7 +289,7 @@ TEST_CASE("caché del prefijo: la misma salida con y sin caché, también si est
     const fs::path dir = tmp.path / "cache" / "dale";
     {
         // First engine: cache miss on the first request, then saves it.
-        auto engine = make_llama_engine({model, default_threads()});
+        auto engine = make_llama_engine(model_options(model));
         CHECK(raws(*engine, requests) == expected);
     }
     const std::vector<fs::path> files = state_files(dir);
@@ -296,7 +302,7 @@ TEST_CASE("caché del prefijo: la misma salida con y sin caché, también si est
            fs::perms::others_read | fs::perms::others_exec));
     {
         // New engine: loads the saved state.
-        auto engine = make_llama_engine({model, default_threads()});
+        auto engine = make_llama_engine(model_options(model));
         CHECK(raws(*engine, requests) == expected);
     }
 
@@ -312,7 +318,7 @@ TEST_CASE("caché del prefijo: la misma salida con y sin caché, también si est
             for (std::uintmax_t i = 0; i < size; ++i) out.put(static_cast<char>((i * 131) & 0xff));
         }
         std::ofstream(dir / "prefix-0000000000000000.state") << "x";
-        auto engine = make_llama_engine({model, default_threads()});
+        auto engine = make_llama_engine(model_options(model));
         CHECK(raws(*engine, {requests[0]}) == std::vector<std::string>{expected[0]});
         CHECK(state_files(dir).size() == 1);
         CHECK(fs::file_size(state) == size);
@@ -328,7 +334,7 @@ TEST_CASE("prompt demasiado largo: too_long") {
     TempDir tmp;
     EnvGuard xdg("XDG_CACHE_HOME");
     xdg.set(tmp.path.string());
-    auto engine = make_llama_engine({model, default_threads()});
+    auto engine = make_llama_engine(model_options(model));
     // 1000 bytes of emoji (the CLI limit) and a context line with many tools.
     std::string request;
     while (request.size() + 4 <= kMaxRequestBytes) request += "\U0001F600";

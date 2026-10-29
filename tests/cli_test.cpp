@@ -144,6 +144,35 @@ TEST_CASE("parse_args: flags") {
     CHECK(parse_args({"--raro", "--model"}).action == Args::Action::BadFlag);
 }
 
+TEST_CASE("parse_args: --setup") {
+    const Args alone = parse_args({"--setup"});
+    CHECK(alone.action == Args::Action::Setup);
+    CHECK(alone.setup);
+    CHECK(alone.request.empty());
+    CHECK_FALSE(parse_args({"hola"}).setup);
+
+    const Args json = parse_args({"--json", "--setup"});
+    CHECK(json.action == Args::Action::Setup);
+    CHECK(json.json);
+
+    // With a request it runs it after choosing again.
+    const Args run = parse_args({"--setup", "lista", "ficheros"});
+    CHECK(run.action == Args::Action::Run);
+    CHECK(run.setup);
+    CHECK(run.request == "lista ficheros");
+    CHECK(parse_args({"lista", "--setup"}).action == Args::Action::Run);
+
+    CHECK(parse_args({"--setup", "--help"}).action == Args::Action::Help);
+    CHECK(parse_args({"--version", "--setup"}).action == Args::Action::Version);
+    CHECK(parse_args({"--setup", "--raro"}).action == Args::Action::BadFlag);
+    CHECK(parse_args({"--setup", "--model"}).action == Args::Action::MissingValue);
+    CHECK(parse_args({"--setups"}).action == Args::Action::BadFlag);
+    const Args after = parse_args({"--", "--setup"});
+    CHECK(after.action == Args::Action::Run);
+    CHECK_FALSE(after.setup);
+    CHECK(after.request == "--setup");
+}
+
 TEST_CASE("línea de contexto de DALE_CONTEXT_FILE") {
     CHECK(is_context_line("os=linux distro=ubuntu-24.04 pm=apt tools=curl,git"));
     CHECK(is_context_line("os=linux distro=unknown pm=none tools=none"));
@@ -210,8 +239,9 @@ TEST_CASE("json_report") {
     using dale::infer::EngineResult;
     using dale::infer::Suggestion;
     using Json = nlohmann::json;
-    const ReportInput in{"m.gguf", 4, "borra tmp", "os=linux distro=x pm=apt tools=none"};
+    const ReportInput in{"m.gguf", 4, "borra tmp", "os=linux distro=x pm=apt tools=none", ""};
     const std::vector<std::string> keys = {"contract_version", "dale_version", "model",  "threads",
+                                           "device",           "gpu",
                                            "request",          "context",      "raw",    "response",
                                            "error",            "error_detail", "risk",         "timings_ms", "tokens"};
 
@@ -232,6 +262,8 @@ TEST_CASE("json_report") {
     CHECK(j["dale_version"] == DALE_VERSION);
     CHECK(j["model"] == "m.gguf");
     CHECK(j["threads"] == 4);
+    CHECK(j["device"] == "cpu");
+    CHECK(j["gpu"].is_null());
     CHECK(j["request"] == "borra tmp");
     CHECK(j["context"] == "os=linux distro=x pm=apt tools=none");
     CHECK(j["raw"] == "{...}");

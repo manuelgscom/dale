@@ -31,6 +31,20 @@ enum class Msg {
     DownloadDeclined,
     DownloadNoTty,     // {} file, {} MB, {} URL
     DownloadDone,      // + path
+    GpuOffer,          // {} GPU, {} free MB, {} file, {} MB, {} URL
+    GpuPrompt,
+    GpuChoice,         // {} GPU, {} free MB, {} 4B file, {} 4B MB, {} 9B file, {} 9B MB
+    GpuChoicePrompt,
+    GpuWarmup,
+    GpuDeclined,
+    GpuDownloadFailed,
+    GpuFailed,         // + detail
+    GpuCrashed,
+    GpuMissing,        // {} GPU
+    NoGpuFound,
+    NoVulkanLoader,
+    SetupCpu,          // {} model file
+    SetupGpu,          // {} GPU, {} model file
     Refuse,            // + explanation
     Unsure,            // + explanation
     LevelSafe,

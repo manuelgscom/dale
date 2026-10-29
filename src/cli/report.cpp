@@ -31,6 +31,8 @@ std::string json_report(const ReportInput& in, const infer::EngineResult& result
     j["dale_version"] = DALE_VERSION;
     j["model"] = in.model;
     j["threads"] = in.threads;
+    j["device"] = in.gpu.empty() ? "cpu" : "gpu";
+    j["gpu"] = in.gpu.empty() ? Json(nullptr) : Json(in.gpu);
     j["request"] = in.request;
     j["context"] = in.context;
     j["raw"] = result.raw;

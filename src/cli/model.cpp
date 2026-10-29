@@ -4,8 +4,6 @@
 
 #include <cstdlib>
 
-#include "fetch/model_info.hpp"
-
 namespace dale::cli {
 
 namespace {
@@ -27,8 +25,9 @@ bool test_model_hooks() {
 #endif
 }
 
-ModelSpec default_model_spec() {
-    const fetch::ModelInfo& m = fetch::kDefaultModel;
+ModelSpec default_model_spec() { return model_spec(fetch::kDefaultModel); }
+
+ModelSpec model_spec(const fetch::ModelInfo& m) {
     ModelSpec spec{m.filename, m.url, m.size, m.sha256};
 #if DALE_TEST_HOOKS
     if (test_model_hooks()) {

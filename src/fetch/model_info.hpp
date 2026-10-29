@@ -1,7 +1,10 @@
 #pragma once
-// Data of the model dale downloads. The single place that holds it: the final model of release 1.0.0.
+// Data of the models dale downloads. The single place that holds it: dale-0.8b (CPU) and the
+// larger dale-4b and dale-9b (GPU), all from the 1.0.0 model family.
 
 #include <cstdint>
+#include <initializer_list>
+#include <string_view>
 
 namespace dale::fetch {
 
@@ -31,6 +34,36 @@ inline constexpr ModelInfo kDale08B_1_0_0_Q4_K_M{
     "Q4_K_M",
 };
 
+// GPU models: same contract and prompt as dale-0.8b, larger base (Qwen3.5-4B fine-tuned; 9B with a
+// merged LoRA). Q4_K_M with imatrix. Hugging Face URLs pinned to the upload commit.
+inline constexpr ModelInfo kDale4B_1_0_0_Q4_K_M{
+    "dale-4b-1.0.0-Q4_K_M.gguf",
+    "https://huggingface.co/manuelgscom/dale-4b-GGUF/resolve/"
+    "b25f568e90a583916182767292885c37857e7bca/dale-4b-1.0.0-Q4_K_M.gguf",
+    2708805056ULL,
+    "a1a5d5185d34dea237616d7a498aa5d9c854316d0af3c87094b73678944e862b",
+    "1.0.0",
+    "Q4_K_M",
+};
+
+inline constexpr ModelInfo kDale9B_1_0_0_Q4_K_M{
+    "dale-9b-1.0.0-Q4_K_M.gguf",
+    "https://huggingface.co/manuelgscom/dale-9b-GGUF/resolve/"
+    "49fb4d649913c5e415a5bb619c20981b89eb8f31/dale-9b-1.0.0-Q4_K_M.gguf",
+    5629109760ULL,
+    "475e4f8ecf69dcc2a1a14f21a9c6756508748e452a3358945c1f7b1616bd9ba5",
+    "1.0.0",
+    "Q4_K_M",
+};
+
+// CPU model, and the fallback whenever the GPU is not used.
 inline constexpr const ModelInfo& kDefaultModel = kDale08B_1_0_0_Q4_K_M;
+
+// Model by file name (the one saved by the first-run setup); nullptr if unknown.
+inline const ModelInfo* find_model(std::string_view filename) {
+    for (const ModelInfo* m : {&kDale08B_1_0_0_Q4_K_M, &kDale4B_1_0_0_Q4_K_M, &kDale9B_1_0_0_Q4_K_M})
+        if (filename == m->filename) return m;
+    return nullptr;
+}
 
 }  // namespace dale::fetch

@@ -21,6 +21,7 @@
 #include "infer/json_tracker.hpp"
 #include "infer/parser.hpp"
 #include "infer/prompt.hpp"
+#include "infer/vulkan_loader.hpp"
 #include "llama.h"
 
 namespace dale::infer {
@@ -51,6 +52,8 @@ bool debug_enabled() {
     const char* v = std::getenv("DALE_DEBUG");
     return v != nullptr && std::strcmp(v, "1") == 0;
 }
+
+int g_debug_tag = 0;  // any non-null address turns the logs on
 
 // Prefix cache directory: $XDG_CACHE_HOME/dale, or $HOME/.cache/dale.
 // Created with 0755. Empty if neither variable is set or it cannot be created.
@@ -129,16 +132,31 @@ private:
             return false;
         }
         const auto t0 = Clock::now();
-        llama_log_set(log_callback, debug_enabled() ? &options_ : nullptr);
+        set_llama_logging();
+        // CPU only: ggml must not start Vulkan (without a Vulkan loader it would crash). If an
+        // earlier GPU detection already registered it, this changes nothing.
+        if (options_.gpu_device.empty()) disable_vulkan_backend();
         llama_backend_init();
         backend_ = true;
 
         llama_model_params mp = llama_model_default_params();
+        // Explicit device list: only the chosen GPU (never split with an iGPU), or none at all.
+        ggml_backend_dev_t devices[2] = {nullptr, nullptr};
+        mp.devices = devices;
         mp.n_gpu_layers = 0;
+        if (!options_.gpu_device.empty()) {
+            devices[0] = ggml_backend_dev_by_name(options_.gpu_device.c_str());
+            mp.n_gpu_layers = 999;  // every layer
+            device_id_ = devices[0] == nullptr ? "" : ggml_backend_dev_description(devices[0]);
+        }
         mp.load_mode = LLAMA_LOAD_MODE_MMAP;
-        model_ = llama_model_load_from_file(options_.model_path.c_str(), mp);
+        if (!options_.gpu_device.empty() && devices[0] == nullptr) {
+            load_error_ = "no se encuentra la GPU " + options_.gpu_device;
+        } else {
+            model_ = llama_model_load_from_file(options_.model_path.c_str(), mp);
+        }
         if (model_ == nullptr) {
-            load_error_ = "no se ha podido cargar el modelo: " + options_.model_path;
+            if (load_error_.empty()) load_error_ = "no se ha podido cargar el modelo: " + options_.model_path;
         } else {
             llama_context_params cp = llama_context_default_params();
             cp.n_ctx = kCtx;
@@ -213,7 +231,8 @@ private:
         if (dir.empty()) return {};
         const std::string key = "contract=" + std::to_string(kContractVersion) + "\n" + model_id_ +
                                 "n_ctx=" + std::to_string(kCtx) + "\nversion=" DALE_VERSION "\nggml=" +
-                                ggml_version() + "-" + ggml_commit() + "\n" + prefix;
+                                ggml_version() + "-" + ggml_commit() + "\ndevice=" +
+                                (device_id_.empty() ? "cpu" : device_id_) + "\n" + prefix;
         return dir + "/prefix-" + fetch::sha256_hex(key).substr(0, 16) + ".state";
     }
 
@@ -376,6 +395,7 @@ private:
     bool backend_ = false;
     std::string load_error_;
     std::string model_id_;  // empty => no prefix cache
+    std::string device_id_;  // GPU description; empty => CPU
     llama_model* model_ = nullptr;
     llama_context* ctx_ = nullptr;
     const llama_vocab* vocab_ = nullptr;
@@ -401,6 +421,8 @@ void prune_prefix_cache(const std::string& dir, const std::string& keep_name, st
     }
     ::closedir(d);
 }
+
+void set_llama_logging() { llama_log_set(log_callback, debug_enabled() ? &g_debug_tag : nullptr); }
 
 std::unique_ptr<Engine> make_llama_engine(const LlamaOptions& options) {
     return std::make_unique<LlamaEngine>(options);

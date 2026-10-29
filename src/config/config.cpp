@@ -104,8 +104,9 @@ bool parse_threads(std::string_view v, int& out) {
 
 ConfigResult parse_config(std::string_view text, std::string_view filename, std::string_view home) {
     Config cfg;
-    int seen_line[4] = {0, 0, 0, 0};  // mode, lang, model, threads
-    static const char* const keys[4] = {"mode", "lang", "model", "threads"};
+    constexpr int kKeys = 5;
+    int seen_line[kKeys] = {0, 0, 0, 0, 0};
+    static const char* const keys[kKeys] = {"mode", "lang", "model", "threads", "device"};
 
     // Leading UTF-8 BOM: ignored.
     if (text.substr(0, 3) == "\xEF\xBB\xBF") text.remove_prefix(3);
@@ -129,12 +130,12 @@ ConfigResult parse_config(std::string_view text, std::string_view filename, std:
         const std::string_view value = trim(line.substr(eq + 1));
 
         int k = -1;
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < kKeys; ++i)
             if (key == keys[i]) k = i;
         if (k < 0)
             return fail(filename, lineno,
-                        "clave desconocida: " + quote(key) + " (válidas: mode, lang, model, threads)",
-                        "unknown key: " + quote(key) + " (valid: mode, lang, model, threads)");
+                        "clave desconocida: " + quote(key) + " (válidas: mode, lang, model, threads, device)",
+                        "unknown key: " + quote(key) + " (valid: mode, lang, model, threads, device)");
 
         const std::string name = keys[k];
         if (seen_line[k] != 0)
@@ -172,6 +173,11 @@ ConfigResult parse_config(std::string_view text, std::string_view filename, std:
             } else {
                 cfg.model = std::string(value);
             }
+        } else if (name == "device") {
+            if (value == "auto") cfg.device = Device::Auto;
+            else if (value == "cpu") cfg.device = Device::Cpu;
+            else if (value == "gpu") cfg.device = Device::Gpu;
+            else return invalid("auto, cpu, gpu", "auto, cpu, gpu");
         } else {
             if (!parse_threads(value, cfg.threads)) return invalid("entero de 1 a 256", "integer from 1 to 256");
         }

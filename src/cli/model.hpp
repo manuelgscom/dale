@@ -5,9 +5,11 @@
 #include <cstdint>
 #include <string>
 
+#include "fetch/model_info.hpp"
+
 namespace dale::cli {
 
-// Default model data: fetch::kDefaultModel, or the DALE_TEST_MODEL_* hooks.
+// Data of a model to find or download: a fetch::ModelInfo, or the DALE_TEST_MODEL_* hooks.
 struct ModelSpec {
     std::string filename;
     std::string url;
@@ -15,8 +17,11 @@ struct ModelSpec {
     std::string sha256;
 };
 
-// kDefaultModel; with DALE_TEST_HOOKS and DALE_TEST_MODEL_URL set, URL, size
-// (DALE_TEST_MODEL_SIZE) and hash (DALE_TEST_MODEL_SHA256) come from the environment.
+// info; with DALE_TEST_HOOKS and DALE_TEST_MODEL_URL set, URL, size (DALE_TEST_MODEL_SIZE) and
+// hash (DALE_TEST_MODEL_SHA256) come from the environment (the file name stays info's).
+ModelSpec model_spec(const fetch::ModelInfo& info);
+
+// model_spec(fetch::kDefaultModel).
 ModelSpec default_model_spec();
 
 // true if the DALE_TEST_MODEL_* hooks are active (they force resolution with FakeEngine).

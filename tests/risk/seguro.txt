@@ -488,3 +488,36 @@ timedatectl list-timezones | grep Madrid
 apt-mark showhold
 apt-mark showmanual
 apt-mark showauto | wc -l
+
+# macOS: read-only system tools
+sw_vers
+vm_stat
+system_profiler SPHardwareDataType
+sysctl -a
+sysctl -n hw.ncpu
+last reboot
+pbpaste
+mdfind -name foo
+mdls file.pdf
+diskutil list
+diskutil info disk0
+diskutil apfs list
+defaults read com.apple.finder
+launchctl list
+scutil --get ComputerName
+networksetup -listallhardwareports
+networksetup -getinfo Wi-Fi
+pmset -g batt
+csrutil status
+softwareupdate -l
+log show --last 5m
+tmutil listbackups
+xattr -l file
+dscl . -list /Users
+plutil -p Info.plist
+lipo -info binary
+otool -L /bin/ls
+brew list
+brew info jq
+brew search node
+brew outdated

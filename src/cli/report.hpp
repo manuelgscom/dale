@@ -6,6 +6,8 @@
 #include "cli/i18n.hpp"
 #include "infer/engine.hpp"
 
+#include "risk/risk.hpp"
+
 namespace dale::cli {
 
 struct ReportInput {
@@ -14,6 +16,7 @@ struct ReportInput {
     std::string request;  // already normalized
     std::string context;  // context line
     std::string gpu;      // GPU description; empty = CPU
+    risk::Policy policy;  // allow/deny from the config, macOS portability
 };
 
 // JSON object on one line, no trailing "\n". Keys in schema order. response and risk

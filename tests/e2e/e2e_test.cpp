@@ -70,6 +70,13 @@ struct Sandbox {
     void config(const std::string& text) const { write_file(".config/dale/config", text); }
 
     // Fake program in <tmp>/bin.
+    // macOS has no shred: a stand-in in <tmp>/bin that deletes its last argument.
+    void fake_shred_if_missing() const {
+#if defined(__APPLE__)
+        fake_bin("shred", "#!/bin/sh\nfor last; do :; done\nrm -f \"$last\"\n");
+#endif
+    }
+
     void fake_bin(const std::string& name, const std::string& script) const {
         write_file("bin/" + name, script);
         fs::permissions(path("bin/" + name), fs::perms::owner_all);
@@ -156,8 +163,9 @@ std::string b64(const std::string& in) {
     std::string out;
     std::size_t i = 0;
     for (; i + 2 < in.size(); i += 3) {
-        const unsigned v = (static_cast<unsigned char>(in[i]) << 16) |
-                           (static_cast<unsigned char>(in[i + 1]) << 8) | static_cast<unsigned char>(in[i + 2]);
+        const unsigned v = (static_cast<unsigned>(static_cast<unsigned char>(in[i])) << 16) |
+                           (static_cast<unsigned>(static_cast<unsigned char>(in[i + 1])) << 8) |
+                           static_cast<unsigned>(static_cast<unsigned char>(in[i + 2]));
         out += abc[(v >> 18) & 63];
         out += abc[(v >> 12) & 63];
         out += abc[(v >> 6) & 63];
@@ -239,6 +247,7 @@ TEST_CASE("5. confirm + peligro + ejecutar: se ejecuta") {
     Sandbox sb;
     sb.write_file("victima.txt", "datos\n");
     sb.fake("shred -u " + sb.path("victima.txt"));
+    sb.fake_shred_if_missing();
     auto s = sb.launch();
     REQUIRE(s->wait_for(kPromptDanger));
     s->write("  ejecutar  \n");
@@ -357,6 +366,7 @@ TEST_CASE("10. copiar con wl-copy falso") {
     sb.fake(cmd);
     sb.vars["WAYLAND_DISPLAY"] = "x";
     sb.fake_bin("wl-copy", "#!/bin/sh\ncat > '" + sb.path("clip.txt") + "'\n");
+    sb.fake_bin("pbcopy", "#!/bin/sh\ncat > '" + sb.path("clip.txt") + "'\n");  // macOS tries it first
     auto s = sb.launch();
     REQUIRE(s->wait_for(kPromptCaution));
     s->write("c\n");
@@ -368,6 +378,7 @@ TEST_CASE("10. copiar con wl-copy falso") {
 
 TEST_CASE("10b. copiar sin pantalla gráfica usa OSC 52") {
     Sandbox sb;
+    sb.fake_bin("pbcopy", "#!/bin/sh\nexit 1\n");  // macOS: pbcopy unusable (e.g. over ssh)
     const std::string cmd = "touch " + sb.path("marca");
     sb.fake(cmd);
     auto s = sb.launch();
@@ -464,6 +475,7 @@ TEST_CASE("14. inglés: prompt [Y/n/e(dit)/c(opy)] y palabra run") {
         sb.vars["LANG"] = "en_US.UTF-8";
         sb.write_file("victima.txt", "datos\n");
         sb.fake("shred -u " + sb.path("victima.txt"));
+        sb.fake_shred_if_missing();
         auto s = sb.launch();
         REQUIRE(s->wait_for("type \"run\""));
         s->write("run\n");

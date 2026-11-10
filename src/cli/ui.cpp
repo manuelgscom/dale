@@ -10,6 +10,8 @@ constexpr std::string_view kGreen = "\x1b[32m";
 constexpr std::string_view kYellow = "\x1b[33m";
 constexpr std::string_view kRedBold = "\x1b[1;31m";
 constexpr std::string_view kBold = "\x1b[1m";
+constexpr std::string_view kRed = "\x1b[31m";
+constexpr std::string_view kCyan = "\x1b[36m";
 constexpr std::string_view kDim = "\x1b[2m";
 constexpr std::string_view kReset = "\x1b[0m";
 constexpr std::size_t kMaxReasons = 3;
@@ -42,7 +44,7 @@ std::string indent(std::string_view text, std::string_view first, std::string_vi
     return out;
 }
 
-std::string reasons(const risk::Assessment& a, UiLang lang) {
+std::string reasons(const risk::Assessment& a, UiLang lang, bool color) {
     std::string out;
     std::size_t shown = 0, total = 0;
     for (const auto& f : a.findings) {
@@ -50,23 +52,19 @@ std::string reasons(const risk::Assessment& a, UiLang lang) {
         ++total;
         if (shown == kMaxReasons) continue;
         ++shown;
-        out += "    · ";
+        out += "    " + paint("·", a.level == risk::Risk::Peligro ? kRed : kYellow, color) + " ";
         if (!f.fragment.empty()) {
-            out += risk::escape_control(f.fragment);
+            out += paint(risk::escape_control(f.fragment), kBold, color);
             out += ": ";
         }
-        out += lang == UiLang::Es ? f.why_es : f.why_en;
+        out += paint(lang == UiLang::Es ? f.why_es : f.why_en, kDim, color);
         out += '\n';
     }
     const std::size_t more = total - shown;
     if (more == 1) {
-        out += "    ";
-        out += tr(lang, Msg::MoreReason);
-        out += '\n';
+        out += "    " + paint(tr(lang, Msg::MoreReason), kDim, color) + "\n";
     } else if (more > 1) {
-        out += "    ";
-        out += fill(tr(lang, Msg::MoreReasons), std::to_string(more));
-        out += '\n';
+        out += "    " + paint(fill(tr(lang, Msg::MoreReasons), std::to_string(more)), kDim, color) + "\n";
     }
     return out;
 }
@@ -81,7 +79,7 @@ bool use_color(bool stdout_tty, const char* no_color, const char* term) {
 }
 
 std::string render_suggestion(std::string_view command, std::string_view explanation, bool color) {
-    std::string out = "\n" + indent(command, "  ❯ ", "    ", kBold, color) + "\n";
+    std::string out = "\n" + indent(command, "  " + paint("❯", kCyan, color) + " ", "    ", kBold, color) + "\n";
     if (!explanation.empty()) out += indent(explanation, "    ", "    ", kDim, color) + "\n";
     out += '\n';
     return out;
@@ -102,16 +100,15 @@ std::string render_risk(const risk::Assessment& a, UiLang lang, bool color, bool
         case risk::Risk::Precaucion:
             out += paint("▲ " + std::string(tr(lang, Msg::LevelCaution)), kYellow, color);
             out += '\n';
-            out += reasons(a, lang);
-            if (ask) out += render_prompt(a.level, lang);
+            out += reasons(a, lang, color);
+            if (ask) out += "\n" + render_prompt(a.level, lang);
             break;
         case risk::Risk::Peligro:
             out += paint(tr(lang, Msg::DangerBanner), kRedBold, color);
-            out += "  ";
-            out += tr(lang, Msg::Irreversible);
             out += '\n';
-            out += reasons(a, lang);
-            if (ask) out += render_prompt(a.level, lang);
+            out += "    " + paint(tr(lang, Msg::Irreversible), kDim, color) + "\n";
+            out += reasons(a, lang, color);
+            if (ask) out += "\n" + render_prompt(a.level, lang);
             break;
     }
     return out;
@@ -139,6 +136,10 @@ std::string render_status(bool ok, std::string_view text, bool color) {
     out += text;
     out += '\n';
     return out;
+}
+
+std::string render_exit_code(int code, UiLang lang, bool color) {
+    return "  " + paint("✗", kRed, color) + " " + fill(tr(lang, Msg::ExitCode), std::to_string(code)) + "\n";
 }
 
 std::string render_separator(bool color) {

@@ -316,14 +316,52 @@ void Engine::argv(const std::vector<Word>& w, const Stdin& in, int depth) {
     std::string name = base_name(w0.text);
     names_.push_back(name);
     if (name == "openssl" && w.size() > 1 && w[1].text == "s_client") names_.emplace_back("s_client");
+    if (policy_ != nullptr) policy_checks(w, make_cmd(w, admin_ > 0), fragment_of(w));
     if (unwrap(name, w, in, depth)) return;
     rules(w, depth, in);
+}
+
+// Does the simple command start with the words of the policy entry? The first word is compared
+// by base name; the rest literally. A dynamic word (a $var, a $(…)) never matches.
+static bool entry_matches(const std::vector<Word>& w, const std::string& entry) {
+    const std::vector<std::string> e = split_words(entry);
+    if (e.empty() || w.size() < e.size()) return false;
+    for (std::size_t i = 0; i < e.size(); ++i) {
+        if (w[i].dynamic || w[i].glob) return false;
+        if (i == 0) {
+            if (e[0].find('/') != std::string::npos ? w[0].text != e[0] : base_name(w[0].text) != e[0]) return false;
+        } else if (w[i].text != e[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static const std::string* first_match(const std::vector<Word>& w, const std::vector<std::string>& entries) {
+    for (const std::string& e : entries) {
+        if (entry_matches(w, e)) return &e;
+    }
+    return nullptr;
+}
+
+// deny and the macOS portability check. Run both for wrappers (xargs, sudo…) and for the
+// command they run; emit() ignores the repeat.
+void Engine::policy_checks(const std::vector<Word>& w, const Cmd& c, const std::string& frag) {
+    if (policy_ == nullptr) return;
+    if (const std::string* hit = first_match(w, policy_->deny)) {
+        emit("DENY", frag, "lo has bloqueado en tu configuración (deny = " + *hit + ")",
+             "blocked by your configuration (deny = " + *hit + ")");
+    }
+    if (policy_->macos) {
+        if (auto why = macos_incompat(c, policy_->has_tool)) emit("MAC", frag, why->first, why->second);
+    }
 }
 
 void Engine::rules(const std::vector<Word>& w, int depth, const Stdin& in) {
     Cmd c = make_cmd(w, admin_ > 0);
     c.input = in.raw;
     std::string frag = fragment_of(w);
+    policy_checks(w, c, frag);
     // Only --help and/or --version: escalation rules do not apply.
     if (!c.args.empty() && std::all_of(c.args.begin(), c.args.end(), [](const Word& a) {
             return a.text == "--help" || a.text == "--version";
@@ -341,6 +379,18 @@ void Engine::rules(const std::vector<Word>& w, int depth, const Stdin& in) {
         code(code_text, depth + 1, Stdin{});
     }
     bool extra = out_.findings.size() > before;  // already writes or runs code: R31 is not needed
+    // allow: what the rules below say about this very command (not nested code, not
+    // redirections) is trusted by the user: caution becomes safe, danger stays.
+    const std::size_t mark = out_.findings.size();
+    const bool trusted = policy_ != nullptr && first_match(w, policy_->allow) != nullptr;
+    const auto finish = [&] {
+        if (!trusted) return;
+        out_.findings.erase(std::remove_if(out_.findings.begin() + static_cast<std::ptrdiff_t>(mark), out_.findings.end(),
+                                           [](const Finding& f) { return f.level == Risk::Precaucion; }),
+                            out_.findings.end());
+        out_.level = Risk::Seguro;
+        for (const Finding& f : out_.findings) out_.level = std::max(out_.level, f.level);
+    };
     bool matched = false;
     for (const Rule& r : rule_table()) {
         if (!r.match || !rule_applies(r, c.name)) continue;
@@ -350,7 +400,7 @@ void Engine::rules(const std::vector<Word>& w, int depth, const Stdin& in) {
             matched = true;
         }
     }
-    if (matched || extra || read_only(c)) return;
+    if (matched || extra || read_only(c)) return finish();
     if (known_command(c.name)) {
         emit("R31", frag, "el verificador no puede confirmar que solo lea información",
              "the checker cannot confirm it only reads information");
@@ -359,11 +409,14 @@ void Engine::rules(const std::vector<Word>& w, int depth, const Stdin& in) {
     } else {
         emit("R31", frag);
     }
+    finish();
 }
 
-Assessment classify(std::string_view command) {
+Assessment classify(std::string_view command) { return classify(command, Policy{}); }
+
+Assessment classify(std::string_view command, const Policy& policy) {
     Assessment a;
-    Engine e(a);
+    Engine e(a, &policy);
     if (command.size() > kMaxInput) {
         e.emit("SIZE", command);
         return a;

@@ -1177,3 +1177,46 @@ sudo firewall-cmd --permanent --load-zone-defaults=public && sudo firewall-cmd -
 firewall-cmd --load-zone-defaults public
 sudo firewall-cmd --reset-to-defaults
 firewall-cmd --reset-to-defaults && firewall-cmd --reload
+
+# macOS: critical paths (R1) and files (R7c)
+rm -rf /Users
+rm -rf /Users/emi
+rm -rf /System
+rm -rf /System/Library
+rm -rf /Library
+rm -rf /Applications
+rm -rf /Volumes
+rm -rf ~/Library
+rm -rf /opt/homebrew
+rm -rf /private/var
+sudo rm -rf /Users/emi
+chmod -R 777 /Users
+rm /etc/zshrc
+rm /private/etc/hosts
+rm /Library/LaunchDaemons/com.example.plist
+
+# macOS: destroying data (R8)
+srm secret.txt
+newfs_apfs -v X /dev/disk2
+diskutil eraseDisk JHFS+ Untitled disk2
+diskutil eraseVolume HFS+ Untitled /Volumes/USB
+diskutil secureErase 0 disk2
+diskutil partitionDisk disk2 GPT JHFS+ Untitled 100%
+diskutil apfs deleteContainer disk3
+diskutil apfs deleteVolume disk3s1
+dd if=/dev/zero of=/dev/rdisk2 bs=1m
+asr restore --source image.dmg --target /Volumes/X --erase
+
+# macOS: protections, backups, accounts (M1, M2, M3)
+csrutil disable
+csrutil authenticated-root disable
+sudo spctl --master-disable
+spctl --global-disable
+fdesetup disable
+tmutil delete /Volumes/Backup/2024-01-01
+tmutil deletelocalsnapshots 2024-01-01-000000
+tmutil removedestination ABC
+dscl . -delete /Users/bob
+dscl . -passwd /Users/bob newpass
+sysadminctl -deleteUser bob
+sysadminctl -resetPasswordFor bob -newPassword x

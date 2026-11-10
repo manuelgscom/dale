@@ -104,9 +104,9 @@ bool parse_threads(std::string_view v, int& out) {
 
 ConfigResult parse_config(std::string_view text, std::string_view filename, std::string_view home) {
     Config cfg;
-    constexpr int kKeys = 5;
-    int seen_line[kKeys] = {0, 0, 0, 0, 0};
-    static const char* const keys[kKeys] = {"mode", "lang", "model", "threads", "device"};
+    constexpr int kKeys = 7;
+    int seen_line[kKeys] = {0, 0, 0, 0, 0, 0, 0};
+    static const char* const keys[kKeys] = {"mode", "lang", "model", "threads", "device", "allow", "deny"};
 
     // Leading UTF-8 BOM: ignored.
     if (text.substr(0, 3) == "\xEF\xBB\xBF") text.remove_prefix(3);
@@ -134,11 +134,12 @@ ConfigResult parse_config(std::string_view text, std::string_view filename, std:
             if (key == keys[i]) k = i;
         if (k < 0)
             return fail(filename, lineno,
-                        "clave desconocida: " + quote(key) + " (válidas: mode, lang, model, threads, device)",
-                        "unknown key: " + quote(key) + " (valid: mode, lang, model, threads, device)");
+                        "clave desconocida: " + quote(key) + " (válidas: mode, lang, model, threads, device, allow, deny)",
+                        "unknown key: " + quote(key) + " (valid: mode, lang, model, threads, device, allow, deny)");
 
         const std::string name = keys[k];
-        if (seen_line[k] != 0)
+        const bool is_list = k >= 5;  // allow and deny may be repeated: the entries add up
+        if (seen_line[k] != 0 && !is_list)
             return fail(filename, lineno,
                         "clave repetida: " + name + " (ya definida en la línea " + std::to_string(seen_line[k]) + ")",
                         "duplicate key: " + name + " (already set on line " + std::to_string(seen_line[k]) + ")");
@@ -172,6 +173,23 @@ ConfigResult parse_config(std::string_view text, std::string_view filename, std:
                 cfg.model = std::string(base) + std::string(value.substr(1));
             } else {
                 cfg.model = std::string(value);
+            }
+        } else if (is_list) {
+            std::vector<std::string>& dst = name == "allow" ? cfg.allow : cfg.deny;
+            std::string_view rest = value;
+            while (true) {
+                const std::size_t semi = rest.find(';');
+                const std::string_view entry = trim(rest.substr(0, semi));
+                if (!entry.empty()) {
+                    if (entry.size() > 256)
+                        return invalid("entradas de hasta 256 caracteres", "entries of up to 256 characters");
+                    if (dst.size() >= 512)
+                        return fail(filename, lineno, "demasiadas entradas en " + name + " (máximo 512)",
+                                    "too many entries in " + name + " (maximum 512)");
+                    dst.emplace_back(entry);
+                }
+                if (semi == std::string_view::npos) break;
+                rest.remove_prefix(semi + 1);
             }
         } else if (name == "device") {
             if (value == "auto") cfg.device = Device::Auto;

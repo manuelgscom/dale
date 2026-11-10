@@ -159,13 +159,33 @@ TEST_CASE("to_line") {
     CHECK(to_line({"linux", "unknown", "none", {}}) == "os=linux distro=unknown pm=none tools=none");
 }
 
+TEST_CASE("macOS: os, distro con ProductVersion y gestor de paquetes") {
+    ContextSources src;
+    src.macos = true;
+    src.macos_version = "15.1";
+    src.path_env = "";
+    SystemContext ctx = detect_context(src);
+    CHECK(ctx.os == "macos");
+    CHECK(ctx.distro == "macos-15.1");
+    CHECK(ctx.pm == "none");
+    CHECK(to_line(ctx) == "os=macos distro=macos-15.1 pm=none tools=none");
+    src.macos_version = "";
+    CHECK(detect_context(src).distro == "macos");
+    src.macos_version = "15.1\x1b[31m";  // control characters never reach the prompt
+    CHECK(detect_context(src).distro == "macos-15.131m");
+}
+
 TEST_CASE("sistema real: coste por debajo de 5 ms") {
     std::vector<double> ms;
     for (int i = 0; i < 50; ++i) {
         const auto t0 = std::chrono::steady_clock::now();
         const SystemContext ctx = detect_context();
         const auto t1 = std::chrono::steady_clock::now();
+#if defined(__APPLE__)
+        CHECK(ctx.os == "macos");
+#else
         CHECK(ctx.os == "linux");
+#endif
         ms.push_back(std::chrono::duration<double, std::milli>(t1 - t0).count());
     }
     std::sort(ms.begin(), ms.end());

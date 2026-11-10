@@ -43,7 +43,7 @@ std::string json_report(const ReportInput& in, const infer::EngineResult& result
         const infer::Suggestion& s = *result.suggestion;
         response = {{"type", kind_name(s.kind)}, {"command", s.command}, {"explanation", s.explanation}};
         if (s.kind == infer::Suggestion::Kind::Command) {
-            const risk::Assessment a = risk::classify(s.command);
+            const risk::Assessment a = risk::classify(s.command, in.policy);
             Json rules = Json::array();
             Json reasons = Json::array();
             // All reasons, in parallel: rules[i] is the id of reasons[i].

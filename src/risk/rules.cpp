@@ -580,6 +580,11 @@ Pkg pkg_info(const Cmd& c) {
                               "add", "link", "unlink"});
     } else if (n == "cargo") {
         p.action = one_of(s, {"install", "uninstall"});
+    } else if (n == "brew") {
+        // Homebrew: no protected packages (R25 does not apply), so pkgs stays empty.
+        p.removal = one_of(s, {"uninstall", "remove", "rm", "autoremove", "cleanup", "zap"});
+        p.action = p.removal || one_of(s, {"install", "reinstall", "upgrade", "update", "tap", "untap", "link", "unlink",
+                                           "pin", "unpin", "services", "migrate", "bundle", "postinstall", "update-reset"});
     }
     return p;
 }
@@ -904,7 +909,7 @@ bool always(const Cmd&) { return true; }
 
 const std::vector<SV> kPkgManagers = {"apt", "apt-get", "apt-mark", "aptitude", "dnf", "yum", "microdnf",
                                       "pacman", "zypper", "apk", "snap", "flatpak", "dpkg", "rpm", "pip", "pip3",
-                                      "pipx", "npm", "cargo"};
+                                      "pipx", "npm", "cargo", "brew"};
 
 }  // namespace
 
@@ -1002,7 +1007,10 @@ Cmd make_cmd(const std::vector<Word>& argv, bool admin) {
 
 const std::vector<Rule>& rule_table() {
     using R = Risk;
-    static const std::vector<Rule> t = {
+    static const std::vector<Rule> base = {
+        {"DENY", {}, R::Peligro, nullptr, false, "lo has bloqueado en tu configuración (deny)",
+         "blocked by your configuration (deny)"},
+        {"MAC", {}, R::Precaucion, nullptr, false, "no funciona igual en macOS", "does not work the same on macOS"},
         {"PARSE", {}, R::Precaucion, nullptr, false, "no se ha podido analizar el comando", "the command could not be parsed"},
         {"SIZE", {}, R::Precaucion, nullptr, false, "el comando es demasiado largo para analizarlo", "the command is too long to check"},
         {"CTRL", {}, R::Precaucion, nullptr, false, "contiene caracteres de control", "contains control characters"},
@@ -1353,6 +1361,11 @@ const std::vector<Rule>& rule_table() {
          },
          true, "escribe en un fichero", "writes to a file"},
     };
+    static const std::vector<Rule> t = [] {
+        std::vector<Rule> all = base;
+        for (const Rule& r : macos_rules()) all.push_back(r);
+        return all;
+    }();
     return t;
 }
 
@@ -1398,6 +1411,7 @@ bool contains(const std::vector<SV>& v, SV s) { return std::find(v.begin(), v.en
 }  // namespace
 
 bool known_command(std::string_view name) {
+    if (macos_known(name)) return true;
     if (contains(kAlways, name) || contains(kConditional, name)) return true;
     for (const Rule& r : rule_table()) {
         if (rule_applies(r, name)) return true;
@@ -1408,6 +1422,7 @@ bool known_command(std::string_view name) {
 bool read_only(const Cmd& c) {
     const std::string& n = c.name;
     if (contains(kAlways, n)) return true;
+    if (const int mac = macos_read_only(c); mac >= 0) return mac == 1;
     if (n == "cd") return true;
     if (n == ":")
         return std::none_of(c.args.begin(), c.args.end(), [](const Word& w) { return w.dynamic; });

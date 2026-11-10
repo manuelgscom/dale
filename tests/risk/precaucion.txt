@@ -254,7 +254,6 @@ umount /mnt/usb
 swapon /swapfile
 swapoff -a
 sysctl -w vm.swappiness=10
-sysctl -a
 echo 1 > /proc/sys/net/ipv4/ip_forward
 echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 modprobe vboxdrv
@@ -386,7 +385,6 @@ zip -r a.zip carpeta
 unzip a.zip
 gzip fichero.txt
 ffmpeg -i a.mp4 b.mp3
-last reboot
 psql -U postgres
 tmux new -s trabajo
 herramienta-desconocida --flag
@@ -683,3 +681,30 @@ sudo apt-mark unhold nginx
 apt-mark auto libfoo1
 apt-mark manual htop
 setfacl -x u:bob informe.txt
+
+# macOS: system-changing tools
+brew install jq
+brew uninstall jq
+brew upgrade
+brew cleanup
+open .
+open -a Safari
+osascript -e 'display notification "hi"'
+defaults write com.apple.finder AppleShowAllFiles true
+defaults delete com.apple.dock
+launchctl unload ~/Library/LaunchAgents/x.plist
+launchctl bootout gui/501/com.example
+networksetup -setdnsservers Wi-Fi 1.1.1.1
+pmset -a disablesleep 1
+nvram -c
+mdutil -E /
+xattr -cr ~/Downloads
+chflags -R nouchg dir
+softwareupdate -i -a
+security delete-keychain x.keychain
+security find-generic-password -s foo -w
+hdiutil attach image.dmg
+diskutil unmount /Volumes/USB
+diskutil eject disk2
+dseditgroup -o edit -a bob -t user admin
+rm -rf ~/Library/Caches/foo

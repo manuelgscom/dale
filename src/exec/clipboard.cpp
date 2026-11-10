@@ -45,6 +45,9 @@ bool pipe_to(const std::vector<std::string>& argv, const std::string& text) {
 }  // namespace
 
 bool copy_to_clipboard(const std::string& text) {
+#if defined(__APPLE__)
+    if (pipe_to({"pbcopy"}, text)) return true;
+#endif
     if (env_set("WAYLAND_DISPLAY") && pipe_to({"wl-copy"}, text)) return true;
     if (env_set("DISPLAY")) {
         if (pipe_to({"xclip", "-selection", "clipboard"}, text)) return true;

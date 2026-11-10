@@ -182,10 +182,15 @@ private:
         // Model identity for the cache key: name, size and mtime.
         struct stat st {};
         if (::stat(options_.model_path.c_str(), &st) == 0) {
+#if defined(__APPLE__)
+            const auto& mtime = st.st_mtimespec;
+#else
+            const auto& mtime = st.st_mtim;
+#endif
             const std::size_t slash = options_.model_path.rfind('/');
             model_id_ = "model=" + options_.model_path.substr(slash == std::string::npos ? 0 : slash + 1) +
-                        "\nsize=" + std::to_string(st.st_size) + "\nmtime=" + std::to_string(st.st_mtim.tv_sec) +
-                        "." + std::to_string(st.st_mtim.tv_nsec) + "\n";
+                        "\nsize=" + std::to_string(st.st_size) + "\nmtime=" + std::to_string(mtime.tv_sec) +
+                        "." + std::to_string(mtime.tv_nsec) + "\n";
         }
         return true;
     }

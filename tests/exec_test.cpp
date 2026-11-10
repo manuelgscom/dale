@@ -149,6 +149,13 @@ TEST_CASE("run_bash: códigos de salida") {
     CHECK(run_bash("false") == 1);
 }
 
+TEST_CASE("run_bash: ls lista una entrada por línea; los flags del usuario mandan") {
+    CHECK(run_bash("[ \"$(ls -d /bin /usr | wc -l)\" -eq 2 ]") == 0);
+    CHECK(run_bash("[ \"$(ls -C -d /bin /usr | wc -l)\" -eq 1 ] || true") == 0);
+    CHECK(run_bash("ls -d /bin >/dev/null") == 0);
+    CHECK(run_bash("ls /no/existe 2>/dev/null") != 0);
+}
+
 TEST_CASE("run_bash: muerte por señal") {
     CHECK(run_bash("kill -TERM $$") == 143);
     CHECK(run_bash("kill -KILL $$") == 137);
@@ -205,7 +212,7 @@ TEST_CASE("edit_in_editor: editores falsos") {
 
     SUBCASE("reescribe el fichero; permisos 0600 y temporal borrado") {
         const fs::path script = d / "ed-rewrite";
-        write_script(script, "stat -c %a \"$1\" > " + D + "/perm\n"
+        write_script(script, "(stat -c %a \"$1\" 2>/dev/null || stat -f %Lp \"$1\") > " + D + "/perm\n"
                              "cat \"$1\" > " + D + "/orig\n"
                              "printf '%s\\n' \"$1\" > " + D + "/path\n"
                              "printf 'ls -la /tmp\\n\\r\\n' > \"$1\"\n");

@@ -71,6 +71,12 @@ set(DALE_CORE_SOURCES)
 foreach(module IN LISTS DALE_MODULES)
   file(GLOB module_sources CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/src/${module}/*.cpp")
   list(FILTER module_sources EXCLUDE REGEX "_main\\.cpp$")
+  # Platform files: *_linux.cpp only on Linux, *_macos.cpp only on macOS.
+  if(APPLE)
+    list(FILTER module_sources EXCLUDE REGEX "_linux\\.cpp$")
+  else()
+    list(FILTER module_sources EXCLUDE REGEX "_macos\\.cpp$")
+  endif()
   list(APPEND DALE_CORE_SOURCES ${module_sources})
 endforeach()
 

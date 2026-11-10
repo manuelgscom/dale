@@ -1,6 +1,8 @@
 #pragma once
 // Escalation rule table, policy ids and read-only whitelist.
 
+#include <functional>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -60,6 +62,15 @@ std::vector<std::string> code_values(const Cmd& c);
 std::string ssh_option_code(std::string_view opt);
 // find starting points ("." by default).
 std::vector<Word> find_start_words(const std::vector<Word>& argv);
+
+// macOS additions (rules_macos.cpp).
+const std::vector<Rule>& macos_rules();
+bool macos_known(std::string_view name);
+int macos_read_only(const Cmd& c);  // -1: not handled here, 0: no, 1: read-only
+// Portability on a macOS system: why this command or option does not work there (es, en).
+// has_tool (optional) says whether a program is installed, e.g. GNU coreutils from Homebrew.
+std::optional<std::pair<std::string, std::string>> macos_incompat(
+    const Cmd& c, const std::function<bool(std::string_view)>& has_tool);
 
 bool is_downloader(std::string_view name);   // curl, wget, fetch, nc…
 bool is_shell(std::string_view name);        // bash, sh, dash, zsh, ksh

@@ -243,7 +243,7 @@ TEST_CASE("json_report") {
     using dale::infer::EngineResult;
     using dale::infer::Suggestion;
     using Json = nlohmann::json;
-    const ReportInput in{"m.gguf", 4, "borra tmp", "os=linux distro=x pm=apt tools=none", ""};
+    const ReportInput in{"m.gguf", 4, "borra tmp", "os=linux distro=x pm=apt tools=none", "", {}};
     const std::vector<std::string> keys = {"contract_version", "dale_version", "model",  "threads",
                                            "device",           "gpu",
                                            "request",          "context",      "raw",    "response",
@@ -336,7 +336,7 @@ TEST_CASE("pantallas") {
     CHECK(render_suggestion("a\nb", "", false) == "\n  ❯ a\n    b\n\n");
     CHECK(render_suggestion("ls\x1b[2J", "", false) == "\n  ❯ ls\\x1b[2J\n\n");
     CHECK(render_suggestion("a\nb", "Lista.", true) ==
-          "\n  ❯ \x1b[1ma\x1b[0m\n    \x1b[1mb\x1b[0m\n    \x1b[2mLista.\x1b[0m\n\n");
+          "\n  \x1b[36m❯\x1b[0m \x1b[1ma\x1b[0m\n    \x1b[1mb\x1b[0m\n    \x1b[2mLista.\x1b[0m\n\n");
 
     Assessment safe;
     CHECK(render_risk(safe, UiLang::Es, false, true) == "  ● seguro  ·  ¿Ejecutar? [S/n/e(ditar)/c(opiar)] ");
@@ -352,20 +352,23 @@ TEST_CASE("pantallas") {
           "  ▲ precaución\n"
           "    · sudo: se ejecuta como administrador\n"
           "    · apt install: instala o elimina software\n"
+          "\n"
           "  ¿Ejecutar? [s/N/e(ditar)/c(opiar)] ");
 
     Assessment danger;
     danger.level = Risk::Peligro;
     for (int i = 0; i < 5; ++i) danger.findings.push_back({Risk::Peligro, "R", "rm -rf ~", "borra", "deletes"});
     const std::string d = render_risk(danger, UiLang::Es, false, true);
-    CHECK(d.rfind("  ███ PELIGRO ███  Esta acción puede ser irreversible.\n    · rm -rf ~: borra\n", 0) == 0);
+    CHECK(d.rfind("  ███ PELIGRO ███\n    Esta acción puede ser irreversible.\n    · rm -rf ~: borra\n", 0) == 0);
     CHECK(has(d, "    y 2 motivos más\n"));
-    CHECK(has(d, "  Para ejecutarlo escribe «ejecutar». e = editar, c = copiar, Intro = cancelar: "));
+    CHECK(has(d, "\n\n  Para ejecutarlo escribe «ejecutar». e = editar, c = copiar, Intro = cancelar: "));
     danger.findings.pop_back();
     CHECK(has(render_risk(danger, UiLang::En, false, false), "    and 1 more reason\n"));
-    CHECK(has(render_risk(danger, UiLang::Es, true, false), "  \x1b[1;31m███ PELIGRO ███\x1b[0m  Esta acción"));
+    CHECK(has(render_risk(danger, UiLang::Es, true, false), "  \x1b[1;31m███ PELIGRO ███\x1b[0m\n    \x1b[2mEsta acción"));
     CHECK(has(render_risk(caution, UiLang::Es, true, false), "  \x1b[33m▲ precaución\x1b[0m\n"));
 
+    CHECK(render_exit_code(3, UiLang::Es, false) == "  ✗ Terminó con código 3\n");
+    CHECK(render_exit_code(3, UiLang::En, true) == "  \x1b[31m✗\x1b[0m Exited with code 3\n");
     CHECK(render_status(true, "Copiado", false) == "  ✓ Copiado\n");
     CHECK(render_status(false, "Cancelado", false) == "  ✗ Cancelado\n");
     CHECK(render_status(true, "Copiado", true) == "  \x1b[32m✓\x1b[0m Copiado\n");

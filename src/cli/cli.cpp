@@ -110,7 +110,7 @@ std::unique_ptr<infer::Engine> fake_engine(bool gpu = false) {
 }
 
 // DALE_FAKE_GPU (tests only): fake GPUs instead of the detection, even without a Vulkan loader.
-bool fake_gpu_hook() {
+[[maybe_unused]] bool fake_gpu_hook() {
 #if DALE_TEST_HOOKS
     return std::getenv("DALE_FAKE_GPU") != nullptr;
 #else
@@ -224,9 +224,12 @@ Plan gpu_plan(const infer::Gpu& g, const ModelPick& m) {
     return p;
 }
 
-// GPUs ggml sees, or none without a Vulkan loader.
+// GPUs ggml sees, or none without a Vulkan loader. macOS uses Metal, which is part of the
+// system: there is no loader to probe.
 std::vector<infer::Gpu> available_gpus() {
+#if !defined(__APPLE__)
     if (!fake_gpu_hook() && !infer::vulkan_loader_available()) return {};
+#endif
     return infer::detect_gpus();
 }
 
@@ -511,12 +514,19 @@ int run(int argc, char** argv) {
         plan = plan_run(args.model ? *args.model : cfg.config->model, *cfg.config, args.setup, args.json, lang);
         if (plan.exit_code >= 0) return plan.exit_code;
     }
+    // allow/deny from the config; on macOS, the portability check (GNU/Linux-only commands).
+    risk::Policy policy;
+    policy.allow = cfg.config->allow;
+    policy.deny = cfg.config->deny;
+    policy.macos = context_line.rfind("os=macos", 0) == 0;
+    policy.has_tool = context::tool_installed;
+
     const int threads = cfg.config->threads > 0 ? cfg.config->threads : infer::default_threads();
     const infer::EngineResult result = suggest(plan, threads, infer::Request{context_line, request}, lang);
     const std::string& model_path = plan.model_path;
 
     if (args.json) {
-        const ReportInput in{file_name(model_path), threads, request, context_line, plan.gpu};
+        const ReportInput in{file_name(model_path), threads, request, context_line, plan.gpu, policy};
         out(json_report(in, result, lang) + "\n");
         if (result.error == "load_failed") {
             err(engine_error_message(result, model_path, lang) + "\n");
@@ -551,7 +561,7 @@ int run(int argc, char** argv) {
     Io io;
     io.write = out;
     io.read_line = read_line;
-    io.classify = risk::classify;
+    io.classify = [policy](std::string_view command) { return risk::classify(command, policy); };
     io.run = exec::run_bash;
     io.edit = exec::edit_in_editor;
     io.copy = exec::copy_to_clipboard;

@@ -12,7 +12,11 @@ const char* const kCritDirs[] = {"/",          "~",           "/bin",        "/b
                                  "/root",      "/run",        "/sbin",       "/srv",        "/sys",     "/usr",
                                  "/var",       "/mnt",        "/media",      "/usr/bin",    "/usr/lib", "/usr/local",
                                  "/usr/share", "/var/lib",    "/usr/sbin",   "/usr/lib64",  "/usr/libexec",
-                                 "/usr/include", "~/.ssh",    "~/.gnupg"};
+                                 "/usr/include", "~/.ssh",    "~/.gnupg",
+                                 // macOS
+                                 "/Users",     "/System",     "/Library",    "/Applications", "/private", "/Volumes",
+                                 "/cores",     "/opt/homebrew", "/private/etc", "/private/var", "/System/Library",
+                                 "/Library/LaunchDaemons", "/Library/LaunchAgents", "~/Library", "~/Library/Keychains"};
 
 // ".", ".." or paths made only of ".." (already normalized).
 bool is_dots(std::string_view p) {
@@ -35,6 +39,8 @@ bool crit_dir(std::string_view p, bool dots) {
     }
     // /home/<name>: another user's home directory (one level)
     if (p.size() > 6 && starts_with(p, "/home/") && p.find('/', 6) == std::string_view::npos) return true;
+    // /Users/<name> (macOS): another user's home directory, same idea
+    if (p.size() > 7 && starts_with(p, "/Users/") && p.find('/', 7) == std::string_view::npos) return true;
     return dots && is_dots(p);
 }
 
@@ -145,11 +151,17 @@ bool in_F(std::string_view p) {
         "/etc/bash.bashrc",   "/etc/environment",     "/etc/crontab",       "~/.bashrc",
         "~/.profile",         "~/.bash_profile",      "~/.bash_login",      "~/.zshrc",
         "~/.zprofile",        "~/.ssh/authorized_keys", "/root/.bashrc",    "/root/.profile",
-        "/root/.ssh/authorized_keys"};
+        "/root/.ssh/authorized_keys",
+        // macOS
+        "/etc/zshrc",         "/etc/zprofile",        "/etc/zshenv",        "/etc/paths",
+        "/etc/pf.conf",       "/private/etc/hosts",   "/private/etc/sudoers", "/private/etc/passwd",
+        "/private/etc/fstab", "~/.zshenv",            "~/.zlogin",          "~/.zlogout"};
     for (const char* f : kFiles) {
         if (p == f) return true;
     }
-    for (std::string_view pre : {"/etc/sudoers.d/", "/boot/", "/etc/pam.d/"}) {
+    for (std::string_view pre : {"/etc/sudoers.d/", "/boot/", "/etc/pam.d/", "/etc/paths.d/", "/private/etc/sudoers.d/",
+                                 "/Library/LaunchDaemons/", "/Library/LaunchAgents/", "~/Library/LaunchAgents/",
+                                 "/System/", "/Library/Keychains/", "~/Library/Keychains/"}) {
         if (p.size() > pre.size() && starts_with(p, pre)) return true;
     }
     return false;

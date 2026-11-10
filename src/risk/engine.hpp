@@ -10,6 +10,7 @@
 
 #include "risk/lexer.hpp"
 #include "risk/risk.hpp"
+#include "risk/rules.hpp"
 
 namespace dale::risk {
 
@@ -33,7 +34,7 @@ struct Produced {
 
 class Engine {
 public:
-    explicit Engine(Assessment& out) : out_(out) {}
+    explicit Engine(Assessment& out, const Policy* policy = nullptr) : out_(out), policy_(policy) {}
 
     // Classifies a piece of code. def: input for commands that have no other.
     void code(std::string_view text, int depth, const Stdin& def);
@@ -52,6 +53,7 @@ private:
     void env_assign(const Word& w);
     void argv(const std::vector<Word>& w, const Stdin& in, int depth);
     void rules(const std::vector<Word>& w, int depth, const Stdin& in = Stdin{});
+    void policy_checks(const std::vector<Word>& w, const Cmd& c, const std::string& frag);
 
     // unwrap.cpp: returns true if the command was a wrapper or interpreter and has been handled.
     bool unwrap(const std::string& name, const std::vector<Word>& w, const Stdin& in, int depth);
@@ -63,6 +65,7 @@ private:
     friend struct Unwrapper;  // wrappers in unwrap.cpp
 
     Assessment& out_;
+    const Policy* policy_;
     std::vector<std::string> names_;  // commands seen, in order (to know what is upstream)
     int admin_ = 0;                   // > 0 under sudo, doas, su…
 };

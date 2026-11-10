@@ -243,7 +243,7 @@ TEST_CASE("json_report") {
     using dale::infer::EngineResult;
     using dale::infer::Suggestion;
     using Json = nlohmann::json;
-    const ReportInput in{"m.gguf", 4, "borra tmp", "os=linux distro=x pm=apt tools=none", ""};
+    const ReportInput in{"m.gguf", 4, "borra tmp", "os=linux distro=x pm=apt tools=none", "", {}};
     const std::vector<std::string> keys = {"contract_version", "dale_version", "model",  "threads",
                                            "device",           "gpu",
                                            "request",          "context",      "raw",    "response",

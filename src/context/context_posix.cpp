@@ -117,6 +117,26 @@ std::set<std::string> find_tools(const std::string& path_env) {
 
 }  // namespace
 
+bool tool_installed(std::string_view name) {
+    if (name.empty() || name.find('/') != std::string_view::npos) return false;
+    const char* path = std::getenv("PATH");
+    if (path == nullptr) return false;
+    std::string_view rest = path;
+    while (true) {
+        const auto colon = rest.find(':');
+        const std::string_view dir = rest.substr(0, colon);
+        if (!dir.empty() && dir.front() == '/') {
+            std::string full(dir);
+            full += '/';
+            full += name;
+            if (::access(full.c_str(), X_OK) == 0) return true;
+        }
+        if (colon == std::string_view::npos) break;
+        rest.remove_prefix(colon + 1);
+    }
+    return false;
+}
+
 SystemContext detect_context() {
     ContextSources sources;
     if (const char* p = std::getenv("PATH")) sources.path_env = p;

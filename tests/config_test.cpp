@@ -216,8 +216,8 @@ TEST_CASE("BOM UTF-8 al principio se ignora") {
 
 TEST_CASE("clave desconocida") {
     const ConfigResult r = parse_err("mode = auto\n\nmodo = auto\n", 3);
-    CHECK(r.error == "~/.config/dale/config:3: clave desconocida: \"modo\" (válidas: mode, lang, model, threads, device)");
-    CHECK(r.error_en == "~/.config/dale/config:3: unknown key: \"modo\" (valid: mode, lang, model, threads, device)");
+    CHECK(r.error == "~/.config/dale/config:3: clave desconocida: \"modo\" (válidas: mode, lang, model, threads, device, allow, deny)");
+    CHECK(r.error_en == "~/.config/dale/config:3: unknown key: \"modo\" (valid: mode, lang, model, threads, device, allow, deny)");
     parse_err("MODE = auto", 1);
     parse_err("= auto", 1);
     parse_err("mo de = auto", 1);

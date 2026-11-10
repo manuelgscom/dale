@@ -957,7 +957,7 @@ TEST_CASE("R26: estado del sistema") {
         CAPTURE(std::string(c));
         CHECK(lv(c) == "precaucion:R26");
     }
-    CHECK(lv("sysctl -a") == "precaucion:R31");
+    CHECK(lv("sysctl -a") == "seguro:");  // reading is harmless; sysctl -w stays R26
 }
 
 TEST_CASE("R27, R27b: kubectl") {

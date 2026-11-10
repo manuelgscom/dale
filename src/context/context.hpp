@@ -2,6 +2,7 @@
 // System context collector (Linux and macOS; the OS-specific logic lives in context_posix.cpp).
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace dale::context {
@@ -26,6 +27,9 @@ struct ContextSources {
 // Real system: standard os-release and $PATH.
 SystemContext detect_context();
 SystemContext detect_context(const ContextSources& sources);
+
+// True if an executable with this name is in $PATH (absolute entries only).
+bool tool_installed(std::string_view name);
 
 // "os=linux distro=ubuntu-24.04 pm=apt tools=fd,jq,rg"
 std::string to_line(const SystemContext& ctx);

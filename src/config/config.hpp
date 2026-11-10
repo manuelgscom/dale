@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace dale::config {
 
@@ -18,6 +19,10 @@ struct Config {
     std::string model;  // empty = default model; "~/" already expanded
     int threads = 0;    // 0 = automatic
     Device device = Device::Auto;
+    // Commands the user trusts / blocks (keys "allow" and "deny": entries separated by ";",
+    // the keys may be repeated). See risk::Policy.
+    std::vector<std::string> allow;
+    std::vector<std::string> deny;
 };
 
 // Empty config => error in the format "file:line: reason", in both languages

@@ -60,6 +60,7 @@ enum class Msg {
     MoreReason,        // "and 1 more reason"
     MoreReasons,       // "and {} more reasons"
     Cancelled,
+    ExitCode,
     Copied,
     CopyFailed,
     EditedExplanation,

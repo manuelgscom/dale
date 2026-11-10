@@ -149,6 +149,13 @@ TEST_CASE("run_bash: códigos de salida") {
     CHECK(run_bash("false") == 1);
 }
 
+TEST_CASE("run_bash: ls lista una entrada por línea; los flags del usuario mandan") {
+    CHECK(run_bash("[ \"$(ls -d /bin /usr | wc -l)\" -eq 2 ]") == 0);
+    CHECK(run_bash("[ \"$(ls -C -d /bin /usr | wc -l)\" -eq 1 ] || true") == 0);
+    CHECK(run_bash("ls -d /bin >/dev/null") == 0);
+    CHECK(run_bash("ls /no/existe 2>/dev/null") != 0);
+}
+
 TEST_CASE("run_bash: muerte por señal") {
     CHECK(run_bash("kill -TERM $$") == 143);
     CHECK(run_bash("kill -KILL $$") == 137);

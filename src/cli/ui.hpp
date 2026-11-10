@@ -29,6 +29,9 @@ std::string render_refusal(bool unsure, std::string_view explanation, UiLang lan
 // "  ✓ <text>\n" (green ✓) if ok; otherwise "  ✗ <text>\n" (dimmed ✗).
 std::string render_status(bool ok, std::string_view text, bool color);
 
+// "  ✗ Terminó con código N\n" (red ✗).
+std::string render_exit_code(int code, UiLang lang, bool color);
+
 // "  ────…\n" (dimmed): separates dale's screen from the command output.
 std::string render_separator(bool color);
 

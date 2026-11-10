@@ -59,7 +59,10 @@ int run_waiting(const std::vector<std::string>& argv, char** envp) {
 }  // namespace
 
 int run_bash(const std::string& command) {
-    const int code = run_waiting({"bash", "-c", command}, nullptr);
+    // ls prints in columns on a terminal; -1 first, so the user's own flags (-l, -C, -m…) win.
+    // On the same line as the command, so error line numbers do not shift.
+    const std::string script = "ls() { command ls -1 \"$@\"; }; " + command;
+    const int code = run_waiting({"bash", "-c", script}, nullptr);
     if (code < 0) {
         detail::print_error("dale: no se pudo lanzar bash / could not launch bash\n");
         return 1;

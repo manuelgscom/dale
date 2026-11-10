@@ -172,6 +172,7 @@ constexpr Entry kTable[] = {
     {Msg::MoreReason, "y 1 motivo más", "and 1 more reason"},
     {Msg::MoreReasons, "y {} motivos más", "and {} more reasons"},
     {Msg::Cancelled, "Cancelado", "Cancelled"},
+    {Msg::ExitCode, "Terminó con código {}", "Exited with code {}"},
     {Msg::Copied, "Copiado al portapapeles", "Copied to clipboard"},
     {Msg::CopyFailed, "No se ha podido copiar al portapapeles", "Could not copy to the clipboard"},
     {Msg::EditedExplanation, "(comando editado)", "(edited command)"},

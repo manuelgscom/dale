@@ -39,8 +39,11 @@ int cancel(const Io& io, const FlowOptions& opt) {
 
 // The separator marks where dale ends and the command output begins.
 int run(const std::string& command, const FlowOptions& opt, const Io& io) {
-    io.write(render_separator(opt.color));
-    return io.run(command);
+    io.write(render_separator(opt.color) + "\n");
+    const int code = io.run(command);
+    io.write("\n");
+    if (code != 0) io.write(render_exit_code(code, opt.lang, opt.color));
+    return code;
 }
 
 }  // namespace

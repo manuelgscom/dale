@@ -138,6 +138,15 @@ TEST_CASE("macOS: opciones de GNU") {
     CHECK(lv("head -n -1 file", p) == "precaucion:MAC");
 }
 
+TEST_CASE("macOS: ficheros y opciones solo de Linux") {
+    const Policy p = mac();
+    CHECK(lv("cat /etc/os-release", p) == "precaucion:MAC");
+    CHECK(lv("cat /proc/cpuinfo", p) == "precaucion:MAC");
+    CHECK(lv("hostname -i", p) == "precaucion:MAC");
+    CHECK(lv("hostname", p) == "seguro:");
+    CHECK(lv("cat /etc/os-release", Policy{}) == "seguro:");
+}
+
 TEST_CASE("macOS: lo que sí funciona no se marca") {
     const Policy p = mac();
     CHECK(lv("ps aux", p) == "seguro:");

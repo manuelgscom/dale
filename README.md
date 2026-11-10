@@ -2,7 +2,9 @@
 
 [![Release](https://img.shields.io/github/v/release/manuelgscom/dale?logo=github&color=blue)](https://github.com/manuelgscom/dale/releases) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![Languages: English · Spanish](https://img.shields.io/badge/languages-English%20%C2%B7%20Spanish-informational) [![llama.cpp](https://img.shields.io/badge/built%20with-llama.cpp-informational)](https://github.com/ggml-org/llama.cpp) ![Runs on: CPU · GPU (Vulkan)](https://img.shields.io/badge/runs%20on-CPU%20%C2%B7%20GPU%20%28Vulkan%29-informational) [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-dale%20models-FFD21E?logo=huggingface)](https://huggingface.co/collections/manuelgscom/dale-6addf69f0c5ce62251553885)
 
-**Natural language to Linux commands. 100% offline. One native binary.**
+**Natural language to Linux and macOS commands. 100% offline. One native binary.**
+
+> **This is `dale-macos`, a macOS port of [manuelgscom/dale](https://github.com/manuelgscom/dale).** It runs on Apple Silicon and Intel Macs (one universal binary, GPU through Metal), knows macOS and BSD tools, warns when the model proposes a GNU/Linux-only command, and adds the `allow` / `deny` lists requested in [upstream issue #2](https://github.com/manuelgscom/dale/issues/2). See [macOS](#macos).
 
 ```bash
 $ dale "find the files over 200 MB in this folder"
@@ -39,6 +41,42 @@ https://github.com/user-attachments/assets/c674c03c-7c1c-42f1-aa2e-abc9944c0ea4
 https://github.com/user-attachments/assets/2287c8ba-1873-479d-bae3-c15fbc173c51
 
 *Safety is decided by code, not by the model: caution with its reasons, danger with a confirmation word, and an honest "no" for non-commands or ambiguous requests. Real, unedited recording; nothing was run.*
+
+## macOS
+
+Requires macOS 13 or later, on Apple Silicon (arm64) or Intel (x86_64), the Xcode command line tools (`xcode-select --install`) and CMake 3.28 or later (`brew install cmake`).
+
+```bash
+git clone --recursive https://github.com/emi-dm/dale-macos.git
+cd dale-macos
+scripts/build-macos.sh            # universal binary arm64 + x86_64, installed in ~/.local/bin
+dale --version
+```
+
+- **GPU through Metal.** Apple Silicon has unified memory, so on the first run `dale` offers `dale-4b` or `dale-9b` according to the memory macOS lets the GPU use. `device = cpu` keeps everything on the CPU. No Vulkan, no extra drivers.
+- **CPU threads.** On Apple Silicon only the performance cores are used (`hw.perflevel0`); on Intel, the physical cores.
+- **System context.** The model receives `os=macos distro=macos-<version> pm=brew` and the tools it finds in `PATH` (Homebrew, `pbcopy`, `launchctl`, `diskutil`…).
+- **Clipboard.** `c` uses `pbcopy`, and falls back to OSC 52 (for example over ssh).
+- **Paths.** Models, state and configuration use the same XDG-style directories (`~/.local/share/dale`, `~/.local/state/dale`, `~/.config/dale`).
+- **Risk verifier, macOS rules.** `rm -rf /Users/<name>`, `/System`, `/Library`, `/Applications`, `~/Library`; `diskutil erase*`/`partitionDisk`/`apfs delete*`, `srm`, `newfs_*`, `asr`; `csrutil disable`, `spctl --master-disable`, `fdesetup disable`; `tmutil delete*`; `dscl -delete`/`-passwd`, `sysadminctl -deleteUser` are **danger**. `defaults write`, `launchctl`, `networksetup -set*`, `pmset`, `nvram`, `xattr -c`, `hdiutil`, `softwareupdate -i`, `brew install/uninstall`, `open`, `osascript`… are **caution**. Read-only tools (`sw_vers`, `vm_stat`, `system_profiler`, `diskutil list`, `defaults read`, `brew list`, `pbpaste`, `sysctl -n`…) are **safe**.
+- **Portability check (rule `MAC`).** The model was trained on Linux and often proposes things that fail or misbehave on macOS: `sed -i 's/a/b/' f` (BSD `sed` takes the next argument as the backup suffix), `ps --sort`, `stat -c`, `date -d`, `grep -P`, `netstat -tulpn`, `cat /etc/os-release`, `ip`, `free`, `sha256sum`, `xdg-open`, `apt`… `dale` flags them as caution with the macOS alternative, so you can press `e` and fix them before running. If you installed the GNU tool (for example coreutils with Homebrew), it is not reported.
+
+### Trusted and blocked commands (`allow`, `deny`)
+
+Answers [upstream issue #2](https://github.com/manuelgscom/dale/issues/2). In `~/.config/dale/config`:
+
+```ini
+# commands you trust: the checker stops asking about them. Entries are separated by ";"
+# and the key may be repeated.
+allow = ffmpeg; docker compose up -d; curl http://127.0.0.1
+# commands you want blocked: they are treated as danger (you must type the confirmation word)
+deny = terraform destroy; git push
+```
+
+- An entry is a command name followed by optional leading arguments. `ffmpeg` trusts every `ffmpeg …`; `docker compose up -d` trusts only that invocation.
+- `allow` turns the **caution** findings of the matching command into safe. It **never lowers a danger finding** (`allow = rm` does not make `rm -rf /` safe), and it does not cover other parts of the line: a `sudo`, a redirection or a piped shell keep their own finding.
+- `deny` wins over `allow`. It is best effort, not a security boundary.
+- A word decided at run time (`$cmd`, `$(…)`) never matches an entry.
 
 ## Install
 
@@ -252,6 +290,7 @@ src/
   config/     ~/.config/dale/config parser, saved first-run choice
   context/    system context collector
   infer/      prompt, llama.cpp engine, JSON parser, GPU detection
+  risk/rules_macos.cpp  macOS rules, read-only macOS tools, GNU/BSD portability check
   vulkan/     forwards Vulkan calls to libvulkan.so.1, opened at run time
   risk/       shell lexer and risk rules (plus the dale_risk helper)
   exec/       bash -c executor, clipboard
@@ -262,9 +301,10 @@ third_party/  llama.cpp (submodule), doctest
 
 ## Limitations
 
-- bash on Linux only. No zsh, fish, PowerShell, cmd or macOS for now.
+- bash on Linux and macOS only (the command runs with `bash -c`; on macOS that is the system bash 3.2). No zsh, fish, PowerShell or cmd syntax.
+- The model is trained on Linux. On macOS the `MAC` check catches the common GNU-isms, but not all of them; read the command.
 - The model can be wrong, in about 1 of 5 cases on the test set with `dale-0.8b` and 1 of 10 with `dale-9b`, and a wrong command can look plausible. **Always read the command before running it.**
-- The GPU is used only through Vulkan (no CUDA or ROCm builds), and only one GPU at a time.
+- The GPU is used through Vulkan on Linux and Metal on macOS (no CUDA or ROCm builds), and only one GPU at a time.
 - `dale` is not a security tool. Its safety comes from the deterministic verifier and the confirmations, not from the model.
 
 ## License

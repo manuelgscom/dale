@@ -349,6 +349,8 @@ const Flagged kFlagged[] = {
     {"sort", [](const Cmd& c) { return arg_is(c, "--parallel"); },
      "el sort de macOS no admite --parallel", "macOS sort has no --parallel"},
     {"cat", [](const Cmd& c) { return c.has("-A"); }, "el cat de macOS no admite -A: usa cat -e -t", "macOS cat has no -A: use cat -e -t"},
+    {"hostname", [](const Cmd& c) { return c.has("-i") || c.has("-I") || c.has("-f") || arg_is(c, "--fqdn") || arg_is(c, "--all-ip-addresses"); },
+     "el hostname de macOS no admite -i, -I ni -f: usa ipconfig getifaddr en0", "macOS hostname has no -i, -I or -f: use ipconfig getifaddr en0"},
     {"rm", [](const Cmd& c) { return arg_is(c, "--preserve-root") || arg_is(c, "--one-file-system") || arg_is(c, "--no-preserve-root"); },
      "el rm de macOS no admite esta opción de GNU", "macOS rm does not support this GNU option"},
 };
@@ -361,6 +363,18 @@ std::optional<std::pair<std::string, std::string>> macos_incompat(const Cmd& c,
         if (c.name != m.name) continue;
         if (has_tool && has_tool(c.name)) return std::nullopt;
         return std::make_pair("no existe en macOS: " + std::string(m.hint_es), "does not exist on macOS: " + std::string(m.hint_en));
+    }
+    // Linux-only files: they do not exist on macOS (and read as "no such file").
+    for (const std::string& p : c.paths) {
+        if (p == "/etc/os-release" || p == "/usr/lib/os-release" || p == "/etc/lsb-release" || p == "/etc/debian_version" ||
+            p == "/etc/redhat-release")
+            return std::make_pair(std::string("no existe en macOS: usa sw_vers"), std::string("does not exist on macOS: use sw_vers"));
+        if (p == "/proc" || p.rfind("/proc/", 0) == 0)
+            return std::make_pair(std::string("/proc no existe en macOS: usa sysctl, vm_stat o ps"),
+                                  std::string("/proc does not exist on macOS: use sysctl, vm_stat or ps"));
+        if (p == "/sys" || p.rfind("/sys/", 0) == 0)
+            return std::make_pair(std::string("/sys no existe en macOS: usa sysctl o system_profiler"),
+                                  std::string("/sys does not exist on macOS: use sysctl or system_profiler"));
     }
     for (const Flagged& f : kFlagged) {
         if (c.name == f.cmd && f.match(c)) return std::make_pair(std::string(f.why_es), std::string(f.why_en));

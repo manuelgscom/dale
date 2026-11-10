@@ -1,6 +1,7 @@
 #include "doctest.h"
 
 #include <cstdlib>
+#include <unistd.h>
 #include <filesystem>
 #include <fstream>
 #include <iterator>

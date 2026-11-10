@@ -2,6 +2,10 @@
 
 #include <unistd.h>
 
+#if defined(__APPLE__)
+#include <sys/sysctl.h>
+#endif
+
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
@@ -24,9 +28,14 @@ constexpr std::string_view kTools[] = {
     "python3", "rg",          "rsync",        "setfacl", "snap",     "ss",         "ssh",
     "sudo",    "systemctl",   "timedatectl",  "tree",    "ufw",      "unrar",      "unzip",
     "wget",    "xz",          "yq",           "yum",     "zip",      "zstd",       "zypper",
+    // macOS: package managers, GNU tools installed by Homebrew (g-prefixed) and system tools.
+    "brew",    "defaults",    "diskutil",     "gawk",    "gdate",    "ggrep",      "gsed",
+    "gtar",    "launchctl",   "mdfind",       "networksetup", "osascript", "pbcopy", "port",
+    "softwareupdate", "tmutil",
 };
 
 constexpr std::string_view kPmFallback[] = {"apt", "dnf", "yum", "pacman", "zypper", "apk"};
+constexpr std::string_view kMacPm[] = {"brew", "port"};
 
 std::string trim(std::string_view s) {
     const auto first = s.find_first_not_of(" \t\r");
@@ -111,11 +120,32 @@ std::set<std::string> find_tools(const std::string& path_env) {
 SystemContext detect_context() {
     ContextSources sources;
     if (const char* p = std::getenv("PATH")) sources.path_env = p;
+#if defined(__APPLE__)
+    sources.macos = true;
+    char buf[64] = {};
+    std::size_t len = sizeof(buf);
+    if (::sysctlbyname("kern.osproductversion", buf, &len, nullptr, 0) == 0) sources.macos_version = buf;
+#endif
     return detect_context(sources);
 }
 
 SystemContext detect_context(const ContextSources& sources) {
     SystemContext ctx;
+    if (sources.macos) {
+        ctx.os = "macos";
+        const std::string v = clean(sources.macos_version, false);
+        ctx.distro = v.empty() ? "macos" : "macos-" + v;
+        const std::set<std::string> found = find_tools(sources.path_env);
+        ctx.tools.assign(found.begin(), found.end());
+        ctx.pm = "none";
+        for (auto pm : kMacPm) {
+            if (found.count(std::string(pm)) != 0) {
+                ctx.pm = std::string(pm);
+                break;
+            }
+        }
+        return ctx;
+    }
     ctx.os = "linux";
 
     const OsRelease rel = read_os_release(sources.os_release_paths);

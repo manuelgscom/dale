@@ -205,7 +205,7 @@ TEST_CASE("edit_in_editor: editores falsos") {
 
     SUBCASE("reescribe el fichero; permisos 0600 y temporal borrado") {
         const fs::path script = d / "ed-rewrite";
-        write_script(script, "stat -c %a \"$1\" > " + D + "/perm\n"
+        write_script(script, "(stat -c %a \"$1\" 2>/dev/null || stat -f %Lp \"$1\") > " + D + "/perm\n"
                              "cat \"$1\" > " + D + "/orig\n"
                              "printf '%s\\n' \"$1\" > " + D + "/path\n"
                              "printf 'ls -la /tmp\\n\\r\\n' > \"$1\"\n");

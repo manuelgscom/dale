@@ -1,5 +1,5 @@
 #pragma once
-// Default thread count. Platform implementation: cpu_linux.cpp.
+// Default thread count. Platform implementations: cpu_linux.cpp, cpu_macos.cpp.
 
 namespace dale::infer {
 

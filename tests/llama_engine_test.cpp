@@ -1,4 +1,5 @@
 #include "doctest.h"
+#include <thread>
 
 #include "infer/cpu.hpp"
 #include "infer/json_tracker.hpp"
@@ -160,13 +161,18 @@ TEST_CASE("rastreador: texto que no empieza por {") {
     CHECK(b.state() == State::Invalid);
 }
 
-TEST_CASE("default_threads: entre 1 y los CPU de la máscara") {
+TEST_CASE("default_threads: entre 1 y los CPU disponibles") {
+    const int n = default_threads();
+    CHECK(n >= 1);
+    CHECK(n <= 8);
+#if defined(__APPLE__)
+    CHECK(n <= static_cast<int>(std::thread::hardware_concurrency()));
+#else
     cpu_set_t mask;
     CPU_ZERO(&mask);
     REQUIRE(sched_getaffinity(0, sizeof(mask), &mask) == 0);
-    const int n = default_threads();
-    CHECK(n >= 1);
     CHECK(n <= CPU_COUNT(&mask));
+#endif
 }
 
 TEST_CASE("modelo inexistente: load_failed con la ruta") {
